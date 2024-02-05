@@ -21,7 +21,7 @@ class Typing {
 
         // Typed file
         final TFile tf = new TFile();
-        final TypeVisitor visitor = new TypeVisitor();
+        final Visitor visitor = new VisitorImpl(tf);
 
         // All functions
         for (Def def : f.l) {
@@ -42,7 +42,7 @@ class Typing {
         }
 
         // Create main function and put body
-        final Function mainFunction = new Function("main", new LinkedList<>());
+        final Function mainFunction = new Function("__main__", new LinkedList<>());
         f.s.accept(visitor);
         final TStmt tstmt = visitor.ret(TStmt.class);
         final TDef mainTDef = new TDef(mainFunction, tstmt);

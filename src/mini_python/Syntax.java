@@ -376,6 +376,8 @@ class File {
    (feel free to modify it for your needs) */
 
 interface Visitor {
+    <T> T ret(Class<T> returnType);
+
     void visit(Cnone c);
 
     void visit(Cbool c);
@@ -415,115 +417,152 @@ interface Visitor {
     void visit(Sset s);
 }
 
-class TypeVisitor implements Visitor {
-    final List<String> functionIdentifiers = new ArrayList<>();
-
-    Object returnValue;
+class VisitorImpl implements Visitor {
+    final TFile tf;
+    Object ret;
 
     private static final List<String> RESERVED_FUNCTION_NAMES = Arrays.asList("list", "len", "range", "print");
 
+    public VisitorImpl(TFile tf) {
+        this.tf = tf;
+    }
+
+    private TExpr expr(Expr e) {
+        e.accept(this);
+        return ret(TExpr.class);
+    }
+
+    private TStmt stmt(Stmt s) {
+        s.accept(this);
+        return ret(TStmt.class);
+    }
+
+    private LinkedList<TExpr> exprs(LinkedList<Expr> exprs) {
+        final LinkedList<TExpr> texprs = new LinkedList<>();
+        for (Expr expr : exprs)
+            texprs.add(expr(expr));
+        return texprs;
+    }
+
+    private LinkedList<TStmt> stmts(LinkedList<Stmt> stmts) {
+        final LinkedList<TStmt> tstmts = new LinkedList<>();
+        for (Stmt stmt : stmts)
+            tstmts.add(stmt(stmt));
+        return tstmts;
+    }
+
+    @Override
     public <T> T ret(Class<T> returnType) {
-        if (returnValue == null) throw new Error("return value is null");
-        if (!returnValue.getClass().equals(returnType))
-            throw new RuntimeException("invalid return type, expected " + returnType.getSimpleName() + " got " + returnValue.getClass().getSimpleName());
-        Object ret = returnValue;
-        returnValue = null;
+        if (this.ret == null) throw new Error("return value is null");
+        if (!this.ret.getClass().equals(returnType))
+            throw new RuntimeException("invalid return type, expected " + returnType.getSimpleName() + " got " + this.ret.getClass().getSimpleName());
+        final Object ret = this.ret;
+        this.ret = null;
         return (T) ret;
     }
 
     @Override
     public void visit(Cnone c) {
-
+        ret = new TEcst(c);
     }
 
     @Override
     public void visit(Cbool c) {
-
+        ret = new TEcst(c);
     }
 
     @Override
     public void visit(Cstring c) {
-
+        ret = new TEcst(c);
     }
 
     @Override
     public void visit(Cint c) {
-
+        ret = new TEcst(c);
     }
 
     @Override
     public void visit(Ecst e) {
-
+        ret = new TEcst(e.c);
     }
 
     @Override
     public void visit(Ebinop e) {
-
+        ret = new TEbinop(e.op, expr(e.e1), expr(e.e2));
     }
 
     @Override
     public void visit(Eunop e) {
-
+        ret = new TEunop(e.op, expr(e));
     }
 
     @Override
     public void visit(Eident e) {
+        ret = new TEident(Variable.mkVariable(e.x.id));
+    }
 
+    private TDef findDef(Ident ident) {
+        for (TDef tdef : tf.l)
+            if (tdef.f.name.equals(ident.id)) return tdef;
+        throw new RuntimeException("Could not find function by name '" + ident + "'");
     }
 
     @Override
     public void visit(Ecall e) {
-
+        ret = new TEcall(findDef(e.f).f, exprs(e.l));
     }
 
     @Override
     public void visit(Eget e) {
-
+        ret = new TEget(expr(e.e1), expr(e.e2));
     }
 
     @Override
     public void visit(Elist e) {
-
+        ret = new TElist(exprs(e.l));
     }
 
     @Override
     public void visit(Sif s) {
-
+        ret = new TSif(expr(s.e), stmt(s.s1), stmt(s.s2));
     }
 
     @Override
     public void visit(Sreturn s) {
-
+        ret = new TSreturn(expr(s.e));
     }
 
     @Override
     public void visit(Sassign s) {
-
+        // Find variable???
+        // ret = new TSassign(expr(s.e));
+        // new TSassign();
+        throw new RuntimeException("TODO");
     }
 
     @Override
     public void visit(Sprint s) {
-
+        ret = new TSprint(expr(s.e));
     }
 
     @Override
     public void visit(Sblock s) {
-
+        ret = new TSblock(stmts(s.l));
     }
 
     @Override
     public void visit(Sfor s) {
-
+        ret = new TSfor(Variable.mkVariable(s.x.id), expr(s.e), stmt(s.s));
     }
 
     @Override
     public void visit(Seval s) {
-
+        ret = new TSeval(expr(s.e));
     }
 
     @Override
     public void visit(Sset s) {
-
+        ret = new TSset(expr(s.e1), expr(s.e2), expr(s.e3));
     }
 }
 
