@@ -29,14 +29,14 @@ class Typing {
 
         // Typed file
         final TFile tf = new TFile();
-        final Function mainFunction = new Function("__main__", new LinkedList<>());
+        final Function mainFunction = new Function("__main__");
         final Visitor visitor = new VisitorImpl(tf, mainFunction);
 
         // All functions
         for (Def def : f.l) {
 
             // Define new typed function
-            final Function defFunction = new Function(def.f.id, new LinkedList<>());
+            final Function defFunction = new Function(def.f.id);
 
             // Pairwise distinct function identifiers
             for (TDef sofar : tf.l)
@@ -66,7 +66,6 @@ class Typing {
         }
 
         // Create main function and put body
-        // Global vars TODO????
         visitor.setFunctionScope(mainFunction);
         f.s.accept(visitor);
         final TStmt tstmt = visitor.ret(TStmt.class);
@@ -249,16 +248,22 @@ class VisitorImpl implements Visitor {
     @NotNull
     private Variable matchVariable(Ident ident) {
 
-        // Function scope
+        // Function parameters
         for (Variable var : functionScope.params)
             if (var.name.equals(ident.id)) return var;
 
-        // Global scope
+        // Local variables
+        for (Variable var : functionScope.local)
+            if (var.name.equals(ident.id)) return var;
+
+        // Global variables (local variables of main function)
         for (Variable var : mfunc.params)
             if (var.name.equals(ident.id)) return var;
 
-        Typing.error(ident.loc, "could not resolve variable with identifier '" + ident.id + "'");
-        return null;
+        // Create new variable, local to visited function
+        final Variable newVar = Variable.mkVariable(ident.id);
+        functionScope.local.add(newVar);
+        return newVar;
     }
 
     @Override

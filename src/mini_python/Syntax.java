@@ -470,11 +470,19 @@ class Variable {
    to a single object of the following class. */
 class Function {
     final String name;
-    final LinkedList<Variable> params;
 
-    Function(String name, LinkedList<Variable> params) {
+    /**
+     * Parameters of function
+     */
+    final LinkedList<Variable> params = new LinkedList<>();
+
+    /**
+     * Local variables of function
+     */
+    final LinkedList<Variable> local = new LinkedList<>();
+
+    Function(String name) {
         this.name = name;
-        this.params = params;
 
         if (Typing.RESERVED_FUNCTION_NAMES.contains(name))
             throw new TypeError("tried defining function with reserved identifier '" + name + "'");
