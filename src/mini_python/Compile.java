@@ -1,5 +1,7 @@
 package mini_python;
 
+import mini_python.annotation.Nullable;
+
 class Compile {
 
     static boolean debug = false;
@@ -8,12 +10,24 @@ class Compile {
         final X86_64 file = new X86_64();
 
 
-
-
         return file; // TODO
     }
 
     class VisitorImpl implements TVisitor {
+        final X86_64 file;
+
+        @Nullable
+        String ret;
+
+        VisitorImpl(X86_64 file) {
+            this.file = file;
+        }
+
+        int labelCounter = 0;
+
+        private String newLabel() {
+            return "l" + labelCounter++;
+        }
 
         @Override
         public void visit(Cnone c) {
@@ -28,6 +42,15 @@ class Compile {
         @Override
         public void visit(Cstring c) {
 
+            // Generate new label and add it to .data section
+            final String label = newLabel();
+            file.label(label);
+
+            // Write constant string to .data section at generated label
+            file.data(c.s);
+
+            // Write label to return
+            ret = label;
         }
 
         @Override
