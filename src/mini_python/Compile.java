@@ -1,7 +1,9 @@
 package mini_python;
 
-import mini_python.annotation.Nullable;
+import mini_python.annotation.NotNull;
 import mini_python.exception.CompileError;
+
+import java.util.HexFormat;
 
 class Compile {
 
@@ -11,75 +13,176 @@ class Compile {
         final X86_64 x86 = new X86_64();
         final TVisitor visitor = new VisitorImpl(x86);
 
-        x86.globl("main");
-        TDef mainDef = f.l.getFirst(); // TODO generalize to all functions
-        x86.label("main");
-        mainDef.body.accept(visitor);
+        // Set entry point to label 'main'
+        x86.globl(LABEL_MAIN);
 
-        // Program return
-        x86.xorq("%rax", "%rax");
-        x86.ret();
+        // TODO generalize to compiling all functions
+        visitor.visit(f.l.getFirst());
 
-        return x86; // TODO
+        return x86;
     }
 
-    static class VisitorImpl implements TVisitor {
-        final X86_64 file;
+    // Labels reserved by the compiler TODO
+    private static final String LABEL_MAIN = "main",
+            LABEL_PRINT = "__print",
+            LABEL_EQ = "__set_true",
+            LABEL_GE = "__ge",
+            LABEL_GT = "__gt",
+            LABEL_LE = "__le",
+            LABEL_LT = "__lt",
+            LABEL_NEQ = "__neq";
 
-        @Nullable
-        String ret;
+   /* private static final List<TDef> stantardFunctions = Arrays.asList(
+            new __eq()
+    );*/
 
-        VisitorImpl(X86_64 file) {
-            this.file = file;
+    private static class VisitorImpl implements TVisitor {
+        final X86_64 x86;
+
+        //@Nullable
+        //String ret;
+
+        VisitorImpl(X86_64 x86) {
+            this.x86 = x86;
         }
 
         int stackPointerValue = 0;
 
-        int labelCounter = 0;
+        int dataLabelCounter = 0, textLabelCounter = 0;
 
-        private String newLabel() {
-            return "l" + labelCounter++;
+        @NotNull
+        private String newDataLabel() {
+            return "c_" + dataLabelCounter++;
+        }
+
+        @NotNull
+        private String newTextLabel() {
+            return "t_" + textLabelCounter++;
+        }
+
+        @NotNull
+        private String label(Function function) {
+            return "f_" + function.name;
+        }
+
+        @Override
+        public void visit(TDef tdef) {
+
+            // Add def label (unique because of type)
+            x86.label(tdef.f.name);
+
+            // Compile function body
+            tdef.body.accept(this);
+
+            // If main, return code 0
+            if (tdef.f.name.equals(LABEL_MAIN)) {
+                x86.xorq("%rax", "%rax");
+                x86.ret();
+            }
         }
 
         @Override
         public void visit(Cnone c) {
-
+            //file.movq("$0", "%rdi"); TODO
         }
 
         @Override
         public void visit(Cbool c) {
-
+            if (c.b) x86.movq(1, "%rdi");
+            else x86.xorq("%rdi", "%rdi");
         }
 
         @Override
         public void visit(Cstring c) {
-            final String label = newLabel();
-            file.dlabel(label);
+            final String label = newDataLabel();
+            x86.dlabel(label);
 
             // Write constant string to .data section at generated label
-            file.string(c.s);
+            x86.string(c.s);
 
             // Write label to return
-            ret = label;
+            x86.movq(label, "%rdi");
         }
 
         @Override
         public void visit(Cint c) {
-
+            x86.movq(HexFormat.of().toHexDigits(c.i), "%rdi");
         }
 
         @Override
         public void visit(TEcst e) {
-
-            if (e.c instanceof Cstring)
-                visit((Cstring) e.c);
-            else
-                throw new CompileError("unsupported constant type");
+            if (e.c instanceof Cnone) visit((Cnone) e.c);
+            else if (e.c instanceof Cbool) visit((Cbool) e.c);
+            else if (e.c instanceof Cstring) visit((Cstring) e.c);
+            else if (e.c instanceof Cint) visit((Cint) e.c);
+            else throw new CompileError("unsupported constant type");
         }
 
         @Override
         public void visit(TEbinop e) {
 
+            e.e2.accept(this);      // %rdi = e2
+            x86.pushq("%rdi");    // save e2 onto stack
+            e.e1.accept(this);      // %rdi = e1
+            x86.popq("%rsi");         // %rsi = e2
+            x86.addq("%rsi", "%rdi"); // %rdi = %rdi * %rsi = e1 * e2
+
+            // Compile operator
+            final String _op1 = "%rdi", _op2 = "%rsi";
+            switch (e.op) {
+                case Badd:
+                    x86.addq(_op2, _op1);
+                    break;
+                case Beq:
+                    x86.cmpq(_op2, _op1);
+                    final String skip = newTextLabel(), next = newTextLabel();
+                    x86.je(skip);
+                    x86.movq(0, "%rdi"); // negative case
+                    x86.jmp(next);              //
+                    x86.label(skip);            //
+                    x86.movq(1, "%rdi"); // positive case
+                    x86.label(next);            // exit
+                    break;
+                case Bge:
+                    x86.testq(_op2, _op1);
+
+                    // TODO
+                    break;
+                case Bgt:
+                    // TODO
+                    break;
+                case Ble:
+                    // TODO
+                    break;
+                case Blt:
+                    // TODO
+                    break;
+                case Bor:
+                    x86.orq(_op2, _op1);
+                    break;
+                case Band:
+                    x86.andq(_op2, _op1);
+                    break;
+                case Bdiv:
+                    // TODO
+                    //x86.idivq(_op2, _op1);
+                    break;
+                case Bmod:
+                    // TODO
+                    //x86.orq(_op2, _op1);
+                    break;
+                case Bmul:
+                    x86.imulq();
+                    break;
+                case Bneq:
+                    // TODO
+                    break;
+                case Bsub:
+                    x86.subq(_op2, _op1);
+                    break;
+                default:
+                    throw new CompileError("unsupported operator " + e.op);
+            }
         }
 
         @Override
@@ -94,8 +197,8 @@ class Compile {
 
         @Override
         public void visit(TEcall e) {
-          // Use name of function for call
-          file.call(e.f.name);
+            // Use name of function for call
+            x86.call(e.f.name);
         }
 
         @Override
@@ -136,9 +239,8 @@ class Compile {
         @Override
         public void visit(TSprint s) {
             s.e.accept(this);
-            file.movq("$"+ret, "%rdi");
-            file.movq("$0", "%rax");
-            file.call("printf");
+            x86.movq("$0", "%rax");
+            x86.call("printf");
         }
 
         @Override

@@ -1,12 +1,9 @@
 package mini_python;
 
 import mini_python.annotation.NotNull;
-import mini_python.annotation.Nullable;
 import mini_python.exception.TypeError;
 
-import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
 
 /* Abstract Syntax of Mini-Python */
 
@@ -785,6 +782,8 @@ class TFile {
    (feel free to modify it for your needs) */
 
 interface TVisitor {
+    void visit(TDef tdef);
+
     void visit(Cnone c);
 
     void visit(Cbool c);
@@ -827,3 +826,15 @@ interface TVisitor {
 
     void visit(TSset s);
 }
+
+/* standard functions compiled with every program
+class __eq extends TDef {
+    __eq() {
+        super(new Function("__eq"), new TStmt() {
+            @Override
+            void accept(TVisitor v) {
+
+            }
+        });
+    }
+}*/
