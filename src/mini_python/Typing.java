@@ -123,7 +123,8 @@ class VisitorImpl implements Visitor {
     @Override
     public <T> T ret(Class<T> returnType) {
         if (this.ret == null) throw new RuntimeException("return value is null");
-        if (!this.ret.getClass().equals(returnType))
+       // System.out.prinln("Return type 1")
+        if (!returnType.isInstance(this.ret))
             throw new RuntimeException("invalid return type, expected " + returnType.getSimpleName() + " got " + this.ret.getClass().getSimpleName());
         final Object ret = this.ret;
         this.ret = null;
@@ -162,12 +163,12 @@ class VisitorImpl implements Visitor {
 
     @Override
     public void visit(Eunop e) {
-        ret = new TEunop(e.op, expr(e));
+        ret = new TEunop(e.op, expr(e.e));
     }
 
     @Override
     public void visit(Eident e) {
-        ret = new TEident(Variable.mkVariable(e.x.id));
+        ret = new TEident(matchVariable(e.x, false));
     }
 
     /**
@@ -246,7 +247,7 @@ class VisitorImpl implements Visitor {
     }
 
     @NotNull
-    private Variable matchVariable(Ident ident) {
+    private Variable matchVariable(Ident ident, boolean allowCreate) {
 
         // Function parameters
         for (Variable var : functionScope.params)
@@ -260,6 +261,11 @@ class VisitorImpl implements Visitor {
         for (Variable var : mfunc.params)
             if (var.name.equals(ident.id)) return var;
 
+        if (!allowCreate) {
+            Typing.error(ident.loc, "Right variable is not identified, with id " + ident.id);
+            return null;
+        }
+
         // Create new variable, local to visited function
         final Variable newVar = Variable.mkVariable(ident.id);
         functionScope.local.add(newVar);
@@ -268,7 +274,7 @@ class VisitorImpl implements Visitor {
 
     @Override
     public void visit(Sassign s) {
-        ret = new TSassign(matchVariable(s.x), expr(s.e));
+        ret = new TSassign(matchVariable(s.x, true), expr(s.e));
     }
 
     @Override
@@ -283,7 +289,9 @@ class VisitorImpl implements Visitor {
 
     @Override
     public void visit(Sfor s) {
-        ret = new TSfor(Variable.mkVariable(s.x.id), expr(s.e), stmt(s.s));
+        final Variable forCounter = Variable.mkVariable(s.x.id);
+        functionScope.local.add(forCounter);
+        ret = new TSfor(forCounter, expr(s.e), stmt(s.s));
     }
 
     @Override

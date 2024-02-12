@@ -46,10 +46,12 @@ public class Main {
       String file_s = file.substring(0, file.length() - 2) + ".s";
       asm.printToFile(file_s);
     } catch (Exception e) {
-      System.out.println(file + ":" + e.getMessage());
+      System.out.println(file + " (exc):" + e.getMessage());
+      //e.printStackTrace();
       System.exit(1);
     } catch (Error e) {
-      System.out.println(file + ":" + e.getMessage());
+      System.out.println(file + " (err):" + e.getMessage());
+      //e.printStackTrace();
       System.exit(1);
     }
   }
