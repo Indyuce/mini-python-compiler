@@ -7,13 +7,17 @@ class Compile {
     static boolean debug = false;
 
     static X86_64 file(TFile f) {
-        final X86_64 file = new X86_64();
+        final X86_64 x86 = new X86_64();
+        final TVisitor visitor = new VisitorImpl(x86);
 
+        TDef mainDef = f.l.getFirst(); // TODO generalize to all functions
+        x86.label(".main");
+        mainDef.body.accept(visitor);
 
-        return file; // TODO
+        return x86;
     }
 
-    class VisitorImpl implements TVisitor {
+    static class VisitorImpl implements TVisitor {
         final X86_64 file;
 
         @Nullable
