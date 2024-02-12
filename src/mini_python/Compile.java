@@ -1,6 +1,7 @@
 package mini_python;
 
 import mini_python.annotation.Nullable;
+import mini_python.exception.CompileError;
 
 class Compile {
 
@@ -10,11 +11,16 @@ class Compile {
         final X86_64 x86 = new X86_64();
         final TVisitor visitor = new VisitorImpl(x86);
 
+        x86.globl("main");
         TDef mainDef = f.l.getFirst(); // TODO generalize to all functions
-        x86.label(".main");
+        x86.label("main");
         mainDef.body.accept(visitor);
 
-        return x86;
+        // Program return
+        x86.xorq("%rax", "%rax");
+        x86.ret();
+
+        return x86; // TODO
     }
 
     static class VisitorImpl implements TVisitor {
@@ -26,6 +32,8 @@ class Compile {
         VisitorImpl(X86_64 file) {
             this.file = file;
         }
+
+        int stackPointerValue = 0;
 
         int labelCounter = 0;
 
@@ -45,13 +53,11 @@ class Compile {
 
         @Override
         public void visit(Cstring c) {
-
-            // Generate new label and add it to .data section
             final String label = newLabel();
-            file.label(label);
+            file.dlabel(label);
 
             // Write constant string to .data section at generated label
-            file.data(c.s);
+            file.string(c.s);
 
             // Write label to return
             ret = label;
@@ -65,6 +71,10 @@ class Compile {
         @Override
         public void visit(TEcst e) {
 
+            if (e.c instanceof Cstring)
+                visit((Cstring) e.c);
+            else
+                throw new CompileError("unsupported constant type");
         }
 
         @Override
@@ -84,7 +94,8 @@ class Compile {
 
         @Override
         public void visit(TEcall e) {
-
+          // Use name of function for call
+          file.call(e.f.name);
         }
 
         @Override
@@ -124,12 +135,17 @@ class Compile {
 
         @Override
         public void visit(TSprint s) {
-
+            s.e.accept(this);
+            file.movq("$"+ret, "%rdi");
+            file.movq("$0", "%rax");
+            file.call("printf");
         }
 
         @Override
         public void visit(TSblock s) {
-
+            for (TStmt stmt : s.l) {
+                stmt.accept(this);
+            }
         }
 
         @Override

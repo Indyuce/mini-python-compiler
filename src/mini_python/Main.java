@@ -47,11 +47,11 @@ public class Main {
       asm.printToFile(file_s);
     } catch (Exception e) {
       System.out.println(file + " (exc):" + e.getMessage());
-      //e.printStackTrace();
+      e.printStackTrace();
       System.exit(1);
     } catch (Error e) {
       System.out.println(file + " (err):" + e.getMessage());
-      //e.printStackTrace();
+      e.printStackTrace();
       System.exit(1);
     }
   }
