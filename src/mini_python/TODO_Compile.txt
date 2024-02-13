@@ -1,0 +1,50 @@
+
+#################################################################"
+DEFAULT OBJECT TYPE DESCRIPTOR
+#################################################################"
+
+str       ()  converts obj to string USELESS
+int       ()  converts to int        USELESS
+bool      ()  converts to boolean    USELESS
+0   +         (e) adds
+8   ==        (e) check equality
+16  >=        (e) greater than
+24  >         (e) greater
+32  <=        (e) lower than
+40  <         (e) lower
+48  or        (e) logical or
+56  and       (e) logical and
+64  /         (e) div by
+72  %         (e) mod by
+80  *         (e) mult by
+88  !=        (e) not equal to
+96  -         (e) subtract
+104 - neg     ()  take opposite
+112 !         ()  logical not
+
+BUILT-IN FUNCTIONS
+len       () length of string/array
+
+#################################################################"
+TYPES
+#################################################################"
+
+== INT
+%rdi = address to value in memory
+TDA     | integer
+8 bytes | 8 bytes
+
+== BOOL
+%rdi = address to value in memory
+TDA     | padding | value
+8 bytes | 7 bits  | 1 bit
+
+== STRING
+%rdi = address to value in memory
+TDA     | padding | value
+8 bytes | 7 bits  | 1 bit
+
+== LIST
+%rdi = address to value in memory
+TDA     | length  | addr1   | addr2   | ... |
+8 bytes | 8 bytes | 8 bytes | 8 bytes | ... |

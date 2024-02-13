@@ -3,7 +3,10 @@ package mini_python;
 import mini_python.annotation.NotNull;
 import mini_python.exception.CompileError;
 
+import java.util.HashMap;
 import java.util.HexFormat;
+import java.util.Map;
+import java.util.function.Consumer;
 
 class Compile {
 
@@ -23,14 +26,7 @@ class Compile {
     }
 
     // Labels reserved by the compiler TODO
-    private static final String LABEL_MAIN = "main",
-            LABEL_PRINT = "__print",
-            LABEL_EQ = "__set_true",
-            LABEL_GE = "__ge",
-            LABEL_GT = "__gt",
-            LABEL_LE = "__le",
-            LABEL_LT = "__lt",
-            LABEL_NEQ = "__neq";
+    private static final String LABEL_MAIN = "__main", LABEL_PRINT = "__print";
 
    /* private static final List<TDef> stantardFunctions = Arrays.asList(
             new __eq()
@@ -131,6 +127,13 @@ class Compile {
             final String _op1 = "%rdi", _op2 = "%rsi";
             switch (e.op) {
                 case Badd:
+
+
+
+
+
+
+
                     x86.addq(_op2, _op1);
                     break;
                 case Beq:
@@ -265,4 +268,58 @@ class Compile {
 
         }
     }
+
+    /**
+     * How to allocate memory:
+     * $ mov {number of bytes to allocate}, %rdi
+     * $ call malloc
+     * $ %rax = address of allocated memory
+     */
+
+    /**
+     * Writes all builtin functions to the current code
+     *
+     * @param x86 Code where to write builtins
+     */
+    private void writeBuiltins(X86_64 x86) {
+
+        // Write all functions to the code
+        builtins.forEach((id, code) -> {
+            x86.label("__" + id);
+            code.accept(x86);
+        });
+    }
+
+    private static final Map<String, Consumer<X86_64>> builtins = new HashMap<>();
+
+    static {
+        builtins.put("int_add", x86 -> {
+            // &[e2]
+            // &[e1]
+            // ....
+            x86.popq("%rdi"); // rdi = &[e1]
+            x86.popq("%rsi"); // rsi = &[e2]
+
+            // Make sure %rsi is
+
+            x86.movq("8(%rdi)", "%rdi"); // rdi = [e1]
+            x86.movq("8(%rsi)", "%rsi"); // rsi = [e2]
+            x86.addq("%rsi", "%rdi"); // rdi = [e1] + [e2]
+            x86.ret();
+        });
+    }
+
+    final BuiltinFunction int_sub = x86 -> {
+        x86.label("__int_add");
+        // &[e2]
+        // &[e1]
+        // ....
+        x86.popq("%rdi"); // rdi = &[e1]
+        x86.popq("%rsi"); // rsi = &[e2]
+
+        x86.movq("1(%rdi)", "%rdi"); // rdi = [e1]
+        x86.movq("1(%rsi)", "%rsi"); // rsi = [e2]
+        x86.addq("%rsi", "%rdi"); // rdi = [e1] + [e2]
+        x86.ret();
+    };
 }
