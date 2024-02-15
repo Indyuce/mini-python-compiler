@@ -10,21 +10,6 @@ import java.util.LinkedList;
 /* Parsed trees.
    This is the output of the parser and the input of the type checker. */
 
-class Location {
-    final int line;
-    final int column;
-
-    Location(int line, int column) {
-        this.line = line + 1;
-        this.column = column;
-    }
-
-    @Override
-    public String toString() {
-        return this.line + ":" + this.column + ":";
-    }
-}
-
 class Ident {
     final String id;
     final Location loc;
@@ -478,11 +463,11 @@ class Function {
      */
     final LinkedList<Variable> local = new LinkedList<>();
 
-    Function(String name) {
+    Function(Location loc, String name) {
         this.name = name;
 
         if (Typing.RESERVED_FUNCTION_NAMES.contains(name))
-            throw new TypeError("tried defining function with reserved identifier '" + name + "'");
+            throw new TypeError(loc, "tried defining function with reserved identifier '" + name + "'");
     }
 }
 

@@ -9,39 +9,32 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Class that takes as input parsed trees and output typed trees.
+ * Class that takes as input parsed trees and outputs typed trees.
  *
  * @see #file(File)
  */
 class Typing {
     static boolean debug = false;
 
-    public static final List<String> RESERVED_FUNCTION_NAMES = Arrays.asList("list", "len", "range", "print");
-
-    /**
-     * Signals a typing error
-     */
-    static void error(Location loc, String msg) {
-        throw new TypeError(loc + "\nerror: " + msg);
-    }
+    public static final List<String> RESERVED_FUNCTION_NAMES = Arrays.asList(Compile.LABEL_MAIN, "list", "len", "range", "print");
 
     static TFile file(File f) {
 
         // Typed file
         final TFile tf = new TFile();
-        final Function mainFunction = new Function("__main__");
+        final Function mainFunction = new Function(Location.START, Compile.LABEL_MAIN);
         final Visitor visitor = new VisitorImpl(tf, mainFunction);
 
         // All functions
         for (Def def : f.l) {
 
             // Define new typed function
-            final Function defFunction = new Function(def.f.id);
+            final Function defFunction = new Function(def.f.loc, def.f.id);
 
             // Pairwise distinct function identifiers
             for (TDef sofar : tf.l)
                 if (sofar.f.name.equals(defFunction.name))
-                    Typing.error(def.f.loc, "duplicate function definition '" + defFunction.name + "'");
+                    throw new TypeError(def.f.loc, "duplicate function definition '" + defFunction.name + "'");
 
             // Iterate over parameters
             for (Ident paramIdent : def.l) {
@@ -49,7 +42,7 @@ class Typing {
                 // Pairwise distinct function param identifiers
                 for (Variable var : defFunction.params)
                     if (var.name.equals(paramIdent.id))
-                        Typing.error(paramIdent.loc, "duplicate function argument identifier '" + paramIdent.id + "'");
+                        throw new TypeError(paramIdent.loc, "duplicate function argument identifier '" + paramIdent.id + "'");
 
                 // Register parameter
                 defFunction.params.add(Variable.mkVariable(paramIdent.id));
@@ -123,7 +116,7 @@ class VisitorImpl implements Visitor {
     @Override
     public <T> T ret(Class<T> returnType) {
         if (this.ret == null) throw new RuntimeException("return value is null");
-       // System.out.prinln("Return type 1")
+        // System.out.prinln("Return type 1")
         if (!returnType.isInstance(this.ret))
             throw new RuntimeException("invalid return type, expected " + returnType.getSimpleName() + " got " + this.ret.getClass().getSimpleName());
         final Object ret = this.ret;
@@ -184,8 +177,7 @@ class VisitorImpl implements Visitor {
             if (tdef.f.name.equals(ident.id)) return tdef.f;
 
         // Throw type error
-        Typing.error(ident.loc, "could not match function to identifier '" + ident + "'");
-        return null;
+        throw new TypeError(ident.loc, "could not match function to identifier '" + ident + "'");
     }
 
     @Override
@@ -194,23 +186,23 @@ class VisitorImpl implements Visitor {
 
             // Wrong syntax
             case "range":
-                Typing.error(e.f.loc, "range(n) can only be used inside of list(.)");
-                break;
+                throw new TypeError(e.f.loc, "range(n) can only be used inside of list(.)");
 
-            // Implementation of list(range(.))
+                // Implementation of list(range(.))
             case "list":
-                if (e.l.size() != 1) Typing.error(e.f.loc, "list(.) takes 1 argument but got " + e.l.size());
+                if (e.l.size() != 1) throw new TypeError(e.f.loc, "list(.) takes 1 argument but got " + e.l.size());
                 final Expr expr = e.l.get(0);
-                if (!(expr instanceof Ecall)) Typing.error(e.f.loc, "list(.) takes a range as argument");
+                if (!(expr instanceof Ecall)) throw new TypeError(e.f.loc, "list(.) takes a range as argument");
                 final Ecall call = (Ecall) expr;
-                if (!call.f.id.equals("range")) Typing.error(call.f.loc, "list(.) takes a range as argument");
-                if (call.l.size() != 1) Typing.error(call.f.loc, "range(.) takes 1 argument but got " + call.l.size());
+                if (!call.f.id.equals("range")) throw new TypeError(call.f.loc, "list(.) takes a range as argument");
+                if (call.l.size() != 1)
+                    throw new TypeError(call.f.loc, "range(.) takes 1 argument but got " + call.l.size());
                 ret = new TErange(expr(call.l.get(0)));
                 break;
 
             // Implementation of len(.)
             case "len":
-                if (e.l.size() != 1) Typing.error(e.f.loc, "len(.) takes 1 argument but got " + e.l.size());
+                if (e.l.size() != 1) throw new TypeError(e.f.loc, "len(.) takes 1 argument but got " + e.l.size());
                 ret = new TElen(expr(e.l.get(0)));
                 break;
 
@@ -220,7 +212,7 @@ class VisitorImpl implements Visitor {
 
                 // Check arity
                 if (e.l.size() != func.params.size())
-                    Typing.error(e.f.loc, "wrong function arity, expected " + func.params.size() + " arguments, got " + e.l.size());
+                    throw new TypeError(e.f.loc, "wrong function arity, expected " + func.params.size() + " arguments, got " + e.l.size());
 
                 ret = new TEcall(func, exprs(e.l));
         }
@@ -261,10 +253,8 @@ class VisitorImpl implements Visitor {
         for (Variable var : mfunc.params)
             if (var.name.equals(ident.id)) return var;
 
-        if (!allowCreate) {
-            Typing.error(ident.loc, "Right variable is not identified, with id " + ident.id);
-            return null;
-        }
+        if (!allowCreate)
+            throw new TypeError(ident.loc, "Right variable is not identified, with id " + ident.id);
 
         // Create new variable, local to visited function
         final Variable newVar = Variable.mkVariable(ident.id);

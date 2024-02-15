@@ -3,24 +3,25 @@
 DEFAULT OBJECT TYPE DESCRIPTOR
 #################################################################"
 
-str       ()  converts obj to string USELESS
-int       ()  converts to int        USELESS
-bool      ()  converts to boolean    USELESS
-0   +         (e) adds
-8   ==        (e) check equality
-16  >=        (e) greater than
-24  >         (e) greater
-32  <=        (e) lower than
-40  <         (e) lower
-48  or        (e) logical or
-56  and       (e) logical and
-64  /         (e) div by
-72  %         (e) mod by
-80  *         (e) mult by
-88  !=        (e) not equal to
-96  -         (e) subtract
-104 - neg     ()  take opposite
-112 !         ()  logical not
+str           ()  converts obj to string USELESS
+int           ()  converts to int        USELESS
+bool          ()  converts to boolean    USELESS
++         (e) adds
+==        (e) check equality
+>=        (e) greater than
+>         (e) greater
+<=        (e) lower than
+<         (e) lower
+or        (e) logical or
+and       (e) logical and
+/         (e) div by
+%         (e) mod by
+*         (e) mult by
+!=        (e) not equal to
+-         (e) subtract
+neg       ()  take opposite
+!         ()  logical not
+print     ()  PRINT IT BABY
 
 BUILT-IN FUNCTIONS
 len       () length of string/array
