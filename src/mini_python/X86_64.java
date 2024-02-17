@@ -5,7 +5,6 @@ import mini_python.annotation.Extra;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 /**
@@ -68,6 +67,13 @@ public class X86_64 {
     X86_64 malloc(int bytes) {
         movq(bytes, "%rdi");
         call("__malloc__");
+        return this;
+    }
+
+    X86_64 exit() {
+        movq(60, "%rax"); // Syscall number
+        movq(1, "%rdi"); // Error code in %rdi
+        emit("syscall");
         return this;
     }
 

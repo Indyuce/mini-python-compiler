@@ -77,8 +77,6 @@ class TVisitorImpl implements TVisitor {
         this.x86 = x86;
     }
 
-    int stackPointerValue = 0;
-
     int dataLabelCounter = 0, textLabelCounter = 0;
 
     @NotNull
