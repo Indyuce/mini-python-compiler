@@ -29,4 +29,11 @@ public class BuiltinFunctions {
 
         x86.jmp(Compile.LABEL_MAIN);
     }
+
+    @Builtin
+    public static void __err__(X86_64 x86) {
+        x86.movq(60, "%rax"); // Syscall number
+        x86.movq(1, "%rdi"); // Error code in %rdi
+        x86.emit("syscall");
+    }
 }

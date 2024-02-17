@@ -70,10 +70,8 @@ public class X86_64 {
         return this;
     }
 
-    X86_64 exit() {
-        movq(60, "%rax"); // Syscall number
-        movq(1, "%rdi"); // Error code in %rdi
-        emit("syscall");
+    X86_64 err() {
+        jmp("__err__");
         return this;
     }
 

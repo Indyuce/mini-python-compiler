@@ -33,22 +33,22 @@ public class bool extends Type {
 
     @Override
     public void __sub__(X86_64 x86) {
-        x86.exit();
+        x86.err();
     }
 
     @Override
     public void __mul__(X86_64 x86) {
-        x86.exit();
+        x86.err();
     }
 
     @Override
     public void __div__(X86_64 x86) {
-        x86.exit();
+        x86.err();
     }
 
     @Override
     public void __mod__(X86_64 x86) {
-        x86.exit();
+        x86.err();
     }
 
     @Override
@@ -93,7 +93,7 @@ public class bool extends Type {
 
     @Override
     public void __neg__(X86_64 x86) {
-        throw new NotImplementedError("method not implemented");
+        x86.err();
     }
 
     @Override
