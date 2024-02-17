@@ -1,24 +1,31 @@
 package mini_python;
 
-import mini_python.annotation.Builtin;
+import mini_python.annotation.BuiltinMethod;
 import mini_python.annotation.NotNull;
 import mini_python.exception.CompileError;
 import mini_python.exception.NotImplementedError;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 
 class Compile {
 
     //region global compilation
-
     static boolean debug = false;
+
+    private static final List<Type> TYPES = Arrays.asList(Type.NONE, Type.BOOL, Type.INT, Type.STRING, Type.LIST);
 
     static X86_64 file(TFile f) {
         final X86_64 x86 = new X86_64();
         final TVisitor visitor = new VisitorImpl(x86);
 
-        registerStaticConstants(x86);
+        // Write standard types and functions
+        for (Type type : TYPES)
+            type.register(x86);
+
+        // Write misc builtins
         writeBuiltins(x86);
 
         // Set entry point
@@ -31,29 +38,10 @@ class Compile {
         return x86;
     }
 
-    private static void registerStaticConstants(X86_64 x86) {
-        x86.dlabel(LABEL_BOOL_TRUE);
-        x86.quad(Type.BOOL.id);
-        x86.quad(1);
-        x86.dlabel(LABEL_BOOL_FALSE);
-        x86.quad(Type.BOOL.id);
-        x86.quad(0);
-        x86.dlabel(LABEL_NONE_NONE);
-        x86.quad(Type.NONE.id);
-        x86.quad(0);
-    }
+    public static final String TDA_REG = "%r11";
 
     // Labels reserved by the compiler
-    public static final String
-
-            // Other reserved labels
-            LABEL_MAIN = "__main__",
-
-    // Static constant labels
-    LABEL_BOOL_TRUE = "__bool__True", LABEL_BOOL_FALSE = "__bool__False", LABEL_NONE_NONE = "__none__None",
-
-    // Type labels (addresses of type descriptors)
-    LABEL_NONE = "__none__", LABEL_BOOL = "__bool__", LABEL_INT = "__int__", LABEL_STRING = "__string__", LABEL_LIST = "__list__";
+    public static final String LABEL_MAIN = "__main__";
 
     //endregion
 
@@ -61,11 +49,6 @@ class Compile {
 
     private static class VisitorImpl implements TVisitor {
         final X86_64 x86;
-
-        /**
-         * Type descriptor of 'object'
-         */
-        final ObjectTypeDescriptor descriptor = new ObjectTypeDescriptor();
 
         //@Nullable
         //String ret;
@@ -111,7 +94,7 @@ class Compile {
             x86.movq("0", "8(%rax)");
             x86.movq("%rax", "%rdi");*/
 
-            x86.movq(LABEL_NONE_NONE, "%rdi");
+            x86.movq(none.NONE, "%rdi");
         }
 
         /**
@@ -133,14 +116,14 @@ class Compile {
             x86.movq(1, "8(%rax)");
             x86.movq("%rax", "%rdi");*/
 
-            x86.movq(c.b ? LABEL_BOOL_TRUE : LABEL_BOOL_FALSE, "%rdi");
+            x86.movq(c.b ? bool.TRUE : bool.FALSE, "%rdi");
         }
 
         @Override
         public void visit(Cstring c) {
             final String label = newDataLabel();
             x86.dlabel(label);
-            x86.quad(Type.STRING.id);
+            x86.quad(Type.STRING.ofs());
             x86.quad(c.s.length());
             x86.string(c.s);
             x86.movq(label, "%rdi");
@@ -150,7 +133,7 @@ class Compile {
         public void visit(Cint c) {
             final String label = newDataLabel();
             x86.dlabel(label);
-            x86.quad(Type.INT.id);
+            x86.quad(Type.INT.ofs());
             x86.quad(c.i);
             x86.movq(label, "%rdi");
         }
@@ -183,7 +166,7 @@ class Compile {
 
             // TODO check for laziness before compiling [e2]
 
-            final ObjectTypeDescriptor.Method method = ObjectTypeDescriptor.Method.from(e.op);
+            final BuiltinMethod method = Type.fromName(e.op);
             final int offset = method.ofs();
 
             x86.movq("0(%rdi)", "%r10"); // %r10 = type descriptor of type([e1])
@@ -306,7 +289,7 @@ class Compile {
 
             // Write all functions to the code
             for (Field field : Functions.class.getDeclaredFields())
-                if (field.isAnnotationPresent(Builtin.class)) {
+                if (field.isAnnotationPresent(BuiltinMethod.class)) {
                     final Consumer<X86_64> code = (Consumer<X86_64>) field.get(null);
                     final String label = field.getName();
 

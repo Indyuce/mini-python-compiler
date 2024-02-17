@@ -4,5 +4,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Builtin {
+public @interface BuiltinMethod {
+
+    public int ofs();
 }
