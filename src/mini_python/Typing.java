@@ -16,7 +16,7 @@ import java.util.List;
 class Typing {
     static boolean debug = false;
 
-    public static final List<String> RESERVED_FUNCTION_NAMES = Arrays.asList(Compile.LABEL_MAIN, "list", "len", "range", "print");
+    private static final List<String> RESERVED_FUNCTION_NAMES = Arrays.asList(Compile.LABEL_MAIN, "list", "len", "range", "print");
 
     static TFile file(File f) {
 
@@ -27,6 +27,10 @@ class Typing {
 
         // All functions
         for (Def def : f.l) {
+
+            // Reserved function name
+            if (Typing.RESERVED_FUNCTION_NAMES.contains(def.f.id))
+                throw new TypeError(def.f.loc, "tried defining function with reserved identifier '" + def.f.id + "'");
 
             // Define new typed function
             final Function defFunction = new Function(def.f.loc, def.f.id);
@@ -253,8 +257,7 @@ class VisitorImpl implements Visitor {
         for (Variable var : mfunc.params)
             if (var.name.equals(ident.id)) return var;
 
-        if (!allowCreate)
-            throw new TypeError(ident.loc, "Right variable is not identified, with id " + ident.id);
+        if (!allowCreate) throw new TypeError(ident.loc, "Right variable is not identified, with id " + ident.id);
 
         // Create new variable, local to visited function
         final Variable newVar = Variable.mkVariable(ident.id);

@@ -56,7 +56,7 @@ public class ObjectTypeDescriptor {
 
         @NotNull
         public static Method fromName(@NotNull String name) {
-            return Objects.requireNonNull(BY_ID.get(name), "Could not find method from object type with id '" + name + "'");
+            return Validate.requireNonNull(BY_ID.get(name), "Could not find method from object type with id '" + name + "'");
         }
 
         @NotNull

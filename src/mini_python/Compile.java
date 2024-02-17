@@ -1,16 +1,16 @@
 package mini_python;
 
+import mini_python.annotation.Builtin;
 import mini_python.annotation.NotNull;
 import mini_python.exception.CompileError;
 import mini_python.exception.NotImplementedError;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.Field;
 import java.util.function.Consumer;
 
 class Compile {
 
-    //region global complation
+    //region global compilation
 
     static boolean debug = false;
 
@@ -19,6 +19,7 @@ class Compile {
         final TVisitor visitor = new VisitorImpl(x86);
 
         registerStaticConstants(x86);
+        writeBuiltins(x86);
 
         // Set entry point
         x86.globl(LABEL_MAIN);
@@ -32,13 +33,13 @@ class Compile {
 
     private static void registerStaticConstants(X86_64 x86) {
         x86.dlabel(LABEL_BOOL_TRUE);
-        x86.quad(0); // Change to bool type descriptor addess
+        x86.quad(Type.BOOL.id);
         x86.quad(1);
         x86.dlabel(LABEL_BOOL_FALSE);
-        x86.quad(0);
+        x86.quad(Type.BOOL.id);
         x86.quad(0);
         x86.dlabel(LABEL_NONE_NONE);
-        x86.quad(0);
+        x86.quad(Type.NONE.id);
         x86.quad(0);
     }
 
@@ -85,11 +86,6 @@ class Compile {
         @NotNull
         private String newTextLabel() {
             return "t_" + textLabelCounter++;
-        }
-
-        @NotNull
-        private String label(Function function) {
-            return "f_" + function.name;
         }
 
         @Override
@@ -144,6 +140,8 @@ class Compile {
         public void visit(Cstring c) {
             final String label = newDataLabel();
             x86.dlabel(label);
+            x86.quad(Type.STRING.id);
+            x86.quad(c.s.length());
             x86.string(c.s);
             x86.movq(label, "%rdi");
         }
@@ -152,6 +150,7 @@ class Compile {
         public void visit(Cint c) {
             final String label = newDataLabel();
             x86.dlabel(label);
+            x86.quad(Type.INT.id);
             x86.quad(c.i);
             x86.movq(label, "%rdi");
         }
@@ -187,7 +186,7 @@ class Compile {
             final ObjectTypeDescriptor.Method method = ObjectTypeDescriptor.Method.from(e.op);
             final int offset = method.ofs();
 
-            x86.movq("(%rdi)", "%r10"); // %r10 = type descriptor of type([e1])
+            x86.movq("0(%rdi)", "%r10"); // %r10 = type descriptor of type([e1])
             x86.callstar(offset + "(%r10)");
         }
 
@@ -269,6 +268,28 @@ class Compile {
         public void visit(TSset s) {
             throw new NotImplementedError("not implemented");
         }
+
+        /**
+         * @param acceptedTypes Types accepted.
+         * @return Code for checking type of
+         */
+        @NotNull
+        private String checkOfType(int... acceptedTypes) {
+            final String label = newTextLabel();
+
+            // Get type, then check
+            x86.movq("0(%rdi)", "%r10");
+            for (int accepted : acceptedTypes) {
+                x86.cmpq(accepted, "%r10");
+                x86.je(label);
+            }
+
+            // Error, exit program
+            //x86
+
+            x86.label(label);
+            return label;
+        }
     }
 
     //endregion
@@ -280,33 +301,24 @@ class Compile {
      *
      * @param x86 Code where to write builtins
      */
-    private void writeBuiltins(X86_64 x86) {
+    private static void writeBuiltins(X86_64 x86) {
+        try {
 
-        // Write all functions to the code
-        builtins.forEach((id, code) -> {
-            x86.label("__" + id);
-            code.accept(x86);
-        });
+            // Write all functions to the code
+            for (Field field : Functions.class.getDeclaredFields())
+                if (field.isAnnotationPresent(Builtin.class)) {
+                    final Consumer<X86_64> code = (Consumer<X86_64>) field.get(null);
+                    final String label = field.getName();
+
+                    // Finally register builtin
+                    x86.label("__" + label);
+                    code.accept(x86);
+                }
+
+
+        } catch (Throwable throwable) {
+            throw new Error("could not write builtin function: " + throwable.getMessage());
+        }
     }
-
-    private static final Map<String, Consumer<X86_64>> builtins = new HashMap<>();
-
-    static {
-        builtins.put("int_add", x86 -> {
-            // &[e2]
-            // &[e1]
-            // ....
-            x86.popq("%rdi"); // rdi = &[e1]
-            x86.popq("%rsi"); // rsi = &[e2]
-
-            // Make sure %rsi is
-
-            x86.movq("8(%rdi)", "%rdi"); // rdi = [e1]
-            x86.movq("8(%rsi)", "%rsi"); // rsi = [e2]
-            x86.addq("%rsi", "%rdi"); // rdi = [e1] + [e2]
-            x86.ret();
-        });
-    }
-
     //endregion
 }

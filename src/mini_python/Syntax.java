@@ -465,9 +465,6 @@ class Function {
 
     Function(Location loc, String name) {
         this.name = name;
-
-        if (Typing.RESERVED_FUNCTION_NAMES.contains(name))
-            throw new TypeError(loc, "tried defining function with reserved identifier '" + name + "'");
     }
 }
 

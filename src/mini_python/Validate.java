@@ -15,4 +15,10 @@ public class Validate {
 
         if (!clazz.isInstance(obj)) throw new IllegalArgumentException(String.valueOf(message));
     }
+
+    @NotNull
+    public static <T> T requireNonNull(@Nullable T obj, @Nullable String message) {
+        if (obj == null) throw new IllegalArgumentException(String.valueOf(message));
+        return obj;
+    }
 }
