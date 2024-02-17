@@ -1,5 +1,6 @@
 package mini_python;
 
+import mini_python.annotation.Extra;
 import mini_python.annotation.NotNull;
 import mini_python.exception.TypeError;
 
@@ -365,6 +366,7 @@ interface Visitor {
     /**
      * Function scope is needed when dealing with recursive functions
      */
+    @Extra
     void setFunctionScope(Function func);
 
     /**
@@ -375,6 +377,7 @@ interface Visitor {
      * @return Return value. Throws an error if null
      */
     @NotNull
+    @Extra
     <T> T ret(Class<T> returnType);
 
     void visit(Cnone c);
@@ -461,6 +464,7 @@ class Function {
     /**
      * Local variables of function
      */
+    @Extra
     final LinkedList<Variable> local = new LinkedList<>();
 
     Function(Location loc, String name) {
@@ -591,6 +595,7 @@ class TElen extends TExpr {
     }
 }
 
+@Extra
 class TErange extends TExpr {
     final TExpr e;
 
@@ -764,6 +769,7 @@ class TFile {
    (feel free to modify it for your needs) */
 
 interface TVisitor {
+    @Extra
     void visit(TDef tdef);
 
     void visit(Cnone c);
@@ -788,6 +794,7 @@ interface TVisitor {
 
     void visit(TElist e);
 
+    @Extra
     void visit(TErange e);
 
     void visit(TElen e);
@@ -808,15 +815,3 @@ interface TVisitor {
 
     void visit(TSset s);
 }
-
-/* standard functions compiled with every program
-class __eq extends TDef {
-    __eq() {
-        super(new Function("__eq"), new TStmt() {
-            @Override
-            void accept(TVisitor v) {
-
-            }
-        });
-    }
-}*/

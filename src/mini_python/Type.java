@@ -1,11 +1,13 @@
 package mini_python;
 
-import mini_python.annotation.BuiltinMethod;
+import mini_python.annotation.Builtin;
 import mini_python.annotation.NotNull;
 import mini_python.exception.CompileError;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,12 +20,7 @@ import java.util.Map;
  * does simplify a lot of things
  */
 public abstract class Type {
-    public static final Type
-            NONE = new none(),
-            BOOL = new bool(),
-            INT = new int64(),
-            STRING = new string(),
-            LIST = new list();
+    public static final Type NONE = new none(), BOOL = new bool(), INT = new int64(), STRING = new string(), LIST = new list();
 
 
     public abstract int ofs();
@@ -32,95 +29,123 @@ public abstract class Type {
 
     public abstract void staticConstants(X86_64 x86);
 
-    @BuiltinMethod(ofs = 0)
+    @Builtin
     public abstract void __add__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 1)
+    @Builtin
     public abstract void __sub__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 2)
+    @Builtin
     public abstract void __mul__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 3)
+    @Builtin
     public abstract void __div__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 4)
+    @Builtin
     public abstract void __mod__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 5)
+    @Builtin
     public abstract void __eq__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 6)
+    @Builtin
     public abstract void __neq__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 7)
+    @Builtin
     public abstract void __lt__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 8)
+    @Builtin
     public abstract void __le__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 9)
+    @Builtin
     public abstract void __gt__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 10)
+    @Builtin
     public abstract void __ge__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 11)
+    @Builtin
     public abstract void __and__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 12)
+    @Builtin
     public abstract void __or__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 13)
+    @Builtin
     public abstract void __neg__(X86_64 x86);
 
-    @BuiltinMethod(ofs = 14)
+    @Builtin
     public abstract void __not__(X86_64 x86);
+
+    public static int getOffset(String functionName) {
+        Method[] arr = Type.class.getDeclaredMethods();
+
+        for (int c = 0; c < arr.length; c++)
+            if (arr[c].getName().equals(functionName)) return c;
+
+        throw new CompileError("could not find offset of function '" + functionName + "'");
+    }
+
+    private static final List<Method> METHODS = findMethods();
+
+    @NotNull
+    private static List<Method> findMethods() {
+        List<Method> list = new ArrayList<>();
+
+        for (Method method : Type.class.getDeclaredMethods())
+            if (method.isAnnotationPresent(Builtin.class)) list.add(method);
+
+        return list;
+    }
+
+    public void compileInit(X86_64 x86) {
+
+        // Static constants if needed
+        staticConstants(x86);
+
+        // Write type descriptor in heap, write function addresses
+        x86.malloc(METHODS.size() * 8);
+        int ofs = 0;
+        for (Method function : METHODS)
+            x86.movq(asmId(this, function), (8 * ofs++) + "(%rax)");
+
+        // Write address to type descriptor in type descriptor array
+        x86.movq("%rax", (ofs() * 8) + "(" + Compile.TDA_REG + ")");
+    }
 
     /**
      * When calling this method, address of type descriptor array
      * is located in %rdi
      */
-    public void register(X86_64 x86) {
-        final Type found = REGISTERED.put(ofs(), this);
-        if (found != null) throw new CompileError("registered type with duplicate id " + ofs());
+    public void compileMethods(X86_64 x86) {
+        final Type nulled = REGISTERED.put(ofs(), this);
+        if (nulled != null) throw new CompileError("registered type with duplicate id " + ofs());
 
         // Write methods
-        for (Method method : this.getClass().getDeclaredMethods()) {
-            final BuiltinMethod annot2 = method.getAnnotation(BuiltinMethod.class);
-            if (annot2 == null) continue;
-
-            // Label method in .text
-            x86.label(asmId(this, annot2, method));
+        for (Method parent : METHODS) {
             try {
-                method.invoke(x86);
+                final Method method = this.getClass().getDeclaredMethod(parent.getName(), X86_64.class);
+
+                // Label method in .text
+                x86.label(asmId(this, method));
+
+                // Write method
+                method.invoke(this, x86);
             } catch (Exception exception) {
-                throw new CompileError("could not compile method " + method.getName() + " from type " + name() + ": " + exception.getMessage());
+                throw new CompileError("could not compile method " + parent.getName() + " from type " + name() + ": " + exception.getMessage());
             }
         }
-
-        // Static constants if needed
-        staticConstants(x86);
-
-        // Write type descriptor in heap
-
-
-        // Write address to type descriptor in type descriptor array
-
     }
 
-    public static BuiltinMethod fromName(Enum element) {
+    public static int ofs(Enum element) {
         for (Method method : Type.class.getDeclaredMethods()) {
-            final BuiltinMethod annot = method.getAnnotation(BuiltinMethod.class);
+            final Builtin annot = method.getAnnotation(Builtin.class);
             if (annot != null && method.getName().substring(2, method.getName().length() - 2).equals(element.name().toLowerCase().substring(1)))
-                return annot;
+                return getOffset(method.getName());
         }
         throw new CompileError("could not find method corresponding to operator " + element.name());
     }
 
     @NotNull
-    private static String asmId(Type type, BuiltinMethod functionAnnot, Method function) {
-        return type.name() + function.getName();
+    private static String asmId(Type type, Method function) {
+        return "__" + type.name() + function.getName();
     }
 
     /**
