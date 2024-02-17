@@ -129,6 +129,7 @@ public abstract class Type {
                 // Write method
                 method.invoke(this, x86);
             } catch (Exception exception) {
+                exception.printStackTrace();
                 throw new CompileError("could not compile method " + parent.getName() + " from type " + name() + ": " + exception.getMessage());
             }
         }

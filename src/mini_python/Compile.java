@@ -20,11 +20,11 @@ public class Compile {
         final X86_64 x86 = new X86_64();
         final TVisitor visitor = new TVisitorImpl(x86);
 
-        // Write misc builtins
-        writeBuiltins(x86);
-
         // Set entry point
         x86.globl(LABEL_INIT);
+
+        // Write misc builtins
+        writeBuiltins(x86);
 
         // Compile builtin type methods
         for (Type type : Compile.TYPES)
@@ -261,10 +261,11 @@ class TVisitorImpl implements TVisitor {
      * @return Code for checking type of
      */
     @NotNull
-    private String checkOfType(int... acceptedTypes) {
+    @Override
+    public String ofType(int... acceptedTypes) {
         final String label = newTextLabel();
 
-        // Get type, then check
+        // Get type and check
         x86.movq("0(%rdi)", "%r10");
         for (int accepted : acceptedTypes) {
             x86.cmpq(accepted, "%r10");
@@ -272,7 +273,7 @@ class TVisitorImpl implements TVisitor {
         }
 
         // Error, exit program
-        //x86
+        x86.err();
 
         x86.label(label);
         return label;

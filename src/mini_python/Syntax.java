@@ -814,4 +814,8 @@ interface TVisitor {
     void visit(TSeval s);
 
     void visit(TSset s);
+
+    @NotNull
+    @Extra
+    String ofType(int... acceptedTypes);
 }
