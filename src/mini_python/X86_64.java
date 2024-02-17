@@ -63,18 +63,6 @@ public class X86_64 {
         return this;
     }
 
-    @Extra
-    X86_64 malloc(int bytes) {
-        movq(bytes, "%rdi");
-        call("__malloc__");
-        return this;
-    }
-
-    X86_64 err() {
-        jmp("__err__");
-        return this;
-    }
-
     /**
      * ajoute de l'assembleur à la fin de la zone text
      * (par exemple pour ajouter des pirmitives écrites en assembleur)

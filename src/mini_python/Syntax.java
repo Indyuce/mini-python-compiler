@@ -769,6 +769,16 @@ class TFile {
    (feel free to modify it for your needs) */
 
 interface TVisitor {
+
+    @Extra
+    X86_64 x86();
+
+    @Extra
+    void malloc(int bytes);
+
+    @Extra
+    void err();
+
     @Extra
     void visit(TDef tdef);
 

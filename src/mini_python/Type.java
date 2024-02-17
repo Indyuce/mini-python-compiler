@@ -27,52 +27,52 @@ public abstract class Type {
 
     public abstract String name();
 
-    public abstract void staticConstants(X86_64 x86);
+    public abstract void staticConstants(TVisitor v);
 
     @Builtin
-    public abstract void __add__(X86_64 x86);
+    public abstract void __add__(TVisitor v);
 
     @Builtin
-    public abstract void __sub__(X86_64 x86);
+    public abstract void __sub__(TVisitor v);
 
     @Builtin
-    public abstract void __mul__(X86_64 x86);
+    public abstract void __mul__(TVisitor v);
 
     @Builtin
-    public abstract void __div__(X86_64 x86);
+    public abstract void __div__(TVisitor v);
 
     @Builtin
-    public abstract void __mod__(X86_64 x86);
+    public abstract void __mod__(TVisitor v);
 
     @Builtin
-    public abstract void __eq__(X86_64 x86);
+    public abstract void __eq__(TVisitor v);
 
     @Builtin
-    public abstract void __neq__(X86_64 x86);
+    public abstract void __neq__(TVisitor v);
 
     @Builtin
-    public abstract void __lt__(X86_64 x86);
+    public abstract void __lt__(TVisitor v);
 
     @Builtin
-    public abstract void __le__(X86_64 x86);
+    public abstract void __le__(TVisitor v);
 
     @Builtin
-    public abstract void __gt__(X86_64 x86);
+    public abstract void __gt__(TVisitor v);
 
     @Builtin
-    public abstract void __ge__(X86_64 x86);
+    public abstract void __ge__(TVisitor v);
 
     @Builtin
-    public abstract void __and__(X86_64 x86);
+    public abstract void __and__(TVisitor v);
 
     @Builtin
-    public abstract void __or__(X86_64 x86);
+    public abstract void __or__(TVisitor v);
 
     @Builtin
-    public abstract void __neg__(X86_64 x86);
+    public abstract void __neg__(TVisitor v);
 
     @Builtin
-    public abstract void __not__(X86_64 x86);
+    public abstract void __not__(TVisitor v);
 
     public static int getOffset(String functionName) {
         Method[] arr = Type.class.getDeclaredMethods();
@@ -95,39 +95,39 @@ public abstract class Type {
         return list;
     }
 
-    public void compileInit(X86_64 x86) {
+    public void compileInit(TVisitor v) {
 
         // Static constants if needed
-        staticConstants(x86);
+        staticConstants(v);
 
         // Write type descriptor in heap, write function addresses
-        x86.malloc(METHODS.size() * 8);
+        v.malloc(METHODS.size() * 8);
         int ofs = 0;
         for (Method function : METHODS)
-            x86.movq(asmId(this, function), (8 * ofs++) + "(%rax)");
+            v.x86().movq(asmId(this, function), (8 * ofs++) + "(%rax)");
 
         // Write address to type descriptor in type descriptor array
-        x86.movq("%rax", (ofs() * 8) + "(" + Compile.TDA_REG + ")");
+        v.x86().movq("%rax", (ofs() * 8) + "(" + Compile.TDA_REG + ")");
     }
 
     /**
      * When calling this method, address of type descriptor array
      * is located in %rdi
      */
-    public void compileMethods(X86_64 x86) {
+    public void compileMethods(TVisitor v) {
         final Type nulled = REGISTERED.put(ofs(), this);
         if (nulled != null) throw new CompileError("registered type with duplicate id " + ofs());
 
         // Write methods
         for (Method parent : METHODS) {
             try {
-                final Method method = this.getClass().getDeclaredMethod(parent.getName(), X86_64.class);
+                final Method method = this.getClass().getDeclaredMethod(parent.getName(), TVisitor.class);
 
                 // Label method in .text
-                x86.label(asmId(this, method));
+                v.x86().label(asmId(this, method));
 
                 // Write method
-                method.invoke(this, x86);
+                method.invoke(this, v);
             } catch (Exception exception) {
                 exception.printStackTrace();
                 throw new CompileError("could not compile method " + parent.getName() + " from type " + name() + ": " + exception.getMessage());

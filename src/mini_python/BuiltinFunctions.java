@@ -5,35 +5,35 @@ import mini_python.annotation.Builtin;
 public class BuiltinFunctions {
 
     @Builtin
-    public static void __malloc__(X86_64 x86) {
-        x86.pushq("%rbp");
-        x86.movq("%rsp", "%rbp");
-        x86.andq("$-16", "%rsp");
-        x86.call("malloc");
-        x86.movq("%rbp", "%rsp");
-        x86.popq("%rbp");
-        x86.ret();
+    public static void __malloc__(TVisitor v) {
+        v.x86().pushq("%rbp");
+        v.x86().movq("%rsp", "%rbp");
+        v.x86().andq("$-16", "%rsp");
+        v.x86().call("malloc");
+        v.x86().movq("%rbp", "%rsp");
+        v.x86().popq("%rbp");
+        v.x86().ret();
     }
 
     @Builtin
-    public static void __init__(X86_64 x86) {
+    public static void __init__(TVisitor v) {
 
         // Initialize type descriptor array
-        x86.malloc(8 * Compile.TYPES.size()); // address in %rax
+        v.malloc(8 * Compile.TYPES.size()); // address in %rax
         // TODO FOR NOW %r11 CONTAINS TYPE DESCRIPTOR ARRAY
-        x86.movq("%rax", Compile.TDA_REG);
+        v.x86().movq("%rax", Compile.TDA_REG);
 
         // Register types
         for (Type type : Compile.TYPES)
-            type.compileInit(x86);
+            type.compileInit(v);
 
-        x86.jmp(Compile.LABEL_MAIN);
+        v.x86().jmp(Compile.LABEL_MAIN);
     }
 
     @Builtin
-    public static void __err__(X86_64 x86) {
-        x86.movq(60, "%rax"); // Syscall number
-        x86.movq(1, "%rdi"); // Error code in %rdi
-        x86.emit("syscall");
+    public static void __err__(TVisitor v) {
+        v.x86().movq(60, "%rax"); // Syscall number
+        v.x86().movq(1, "%rdi"); // Error code in %rdi
+        v.x86().emit("syscall");
     }
 }

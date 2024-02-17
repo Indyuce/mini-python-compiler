@@ -17,87 +17,87 @@ public class bool extends Type {
     }
 
     @Override
-    public void staticConstants(X86_64 x86) {
-        x86.dlabel(TRUE);
-        x86.quad(ofs());
-        x86.quad(1);
-        x86.dlabel(FALSE);
-        x86.quad(ofs());
-        x86.quad(0);
+    public void staticConstants(TVisitor v) {
+        v.x86().dlabel(TRUE);
+        v.x86().quad(ofs());
+        v.x86().quad(1);
+        v.x86().dlabel(FALSE);
+        v.x86().quad(ofs());
+        v.x86().quad(0);
     }
 
     @Override
-    public void __add__(X86_64 x86) {
+    public void __add__(TVisitor v) {
         // TODO
     }
 
     @Override
-    public void __sub__(X86_64 x86) {
-        x86.err();
+    public void __sub__(TVisitor v) {
+        v.err();
     }
 
     @Override
-    public void __mul__(X86_64 x86) {
-        x86.err();
+    public void __mul__(TVisitor v) {
+        v.err();
     }
 
     @Override
-    public void __div__(X86_64 x86) {
-        x86.err();
+    public void __div__(TVisitor v) {
+        v.err();
     }
 
     @Override
-    public void __mod__(X86_64 x86) {
-        x86.err();
+    public void __mod__(TVisitor v) {
+        v.err();
     }
 
     @Override
-    public void __eq__(X86_64 x86) {
+    public void __eq__(TVisitor v) {
         // TODO
     }
 
     @Override
-    public void __neq__(X86_64 x86) {
+    public void __neq__(TVisitor v) {
         // TODO
     }
 
     @Override
-    public void __lt__(X86_64 x86) {
+    public void __lt__(TVisitor v) {
         // TODO
     }
 
     @Override
-    public void __le__(X86_64 x86) {
+    public void __le__(TVisitor v) {
         // TODO
     }
 
     @Override
-    public void __gt__(X86_64 x86) {
+    public void __gt__(TVisitor v) {
         // TODO
     }
 
     @Override
-    public void __ge__(X86_64 x86) {
+    public void __ge__(TVisitor v) {
         // TODO
     }
 
     @Override
-    public void __and__(X86_64 x86) {
+    public void __and__(TVisitor v) {
         // TODO
     }
 
     @Override
-    public void __or__(X86_64 x86) {
+    public void __or__(TVisitor v) {
         // TODO
     }
 
     @Override
-    public void __neg__(X86_64 x86) {
-        x86.err();
+    public void __neg__(TVisitor v) {
+        v.err();
     }
 
     @Override
-    public void __not__(X86_64 x86) {
+    public void __not__(TVisitor v) {
         // TODO
     }
 }

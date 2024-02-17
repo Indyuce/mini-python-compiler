@@ -1,6 +1,7 @@
 package mini_python;
 
 import mini_python.annotation.Builtin;
+import mini_python.annotation.Extra;
 import mini_python.annotation.NotNull;
 import mini_python.exception.CompileError;
 import mini_python.exception.NotImplementedError;
@@ -24,11 +25,11 @@ public class Compile {
         x86.globl(LABEL_INIT);
 
         // Write misc builtins
-        writeBuiltins(x86);
+        writeBuiltins(visitor);
 
         // Compile builtin type methods
         for (Type type : Compile.TYPES)
-            type.compileMethods(x86);
+            type.compileMethods(visitor);
 
         // Compile all user functions
         for (TDef tdef : f.l)
@@ -49,17 +50,17 @@ public class Compile {
     /**
      * Writes all builtin functions to the current code
      *
-     * @param x86 Code where to write builtins
+     * @param v Code where to write builtins
      */
-    private static void writeBuiltins(X86_64 x86) {
+    private static void writeBuiltins(TVisitor v) {
 
         // Write all functions to the code
         for (Method function : BuiltinFunctions.class.getDeclaredMethods())
             if (function.isAnnotationPresent(Builtin.class)) try {
 
                 // Finally register builtin
-                x86.label(function.getName());
-                function.invoke(null, x86);
+                v.x86().label(function.getName());
+                function.invoke(null, v);
             } catch (Exception exception) {
                 throw new CompileError(exception);
             }
@@ -68,7 +69,7 @@ public class Compile {
 }
 
 class TVisitorImpl implements TVisitor {
-    final X86_64 x86;
+    public final X86_64 x86;
 
     //@Nullable
     //String ret;
@@ -87,6 +88,23 @@ class TVisitorImpl implements TVisitor {
     @NotNull
     private String newTextLabel() {
         return "t_" + textLabelCounter++;
+    }
+
+    @Override
+    public X86_64 x86() {
+        return x86;
+    }
+
+    @Override
+    public void malloc(int bytes) {
+        x86.movq(bytes, "%rdi");
+        x86.call("__malloc__");
+    }
+
+    @Extra
+    @Override
+    public void err() {
+        x86.jmp("__err__");
     }
 
     @Override
@@ -273,7 +291,7 @@ class TVisitorImpl implements TVisitor {
         }
 
         // Error, exit program
-        x86.err();
+        err();
 
         x86.label(label);
         return label;
