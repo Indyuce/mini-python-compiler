@@ -1,5 +1,8 @@
 package mini_python;
 
+import mini_python.annotation.Delegated;
+import mini_python.exception.FunctionDelegatedError;
+
 public class none extends Type {
 
     public static final String
@@ -99,7 +102,7 @@ public class none extends Type {
 
     @Override
     public void __not__(TVisitor v) {
-        v.err();
+        v.x86().jmp("__bool__not__"); // not(.) = not(bool(.))
     }
 
     @Override
@@ -109,7 +112,10 @@ public class none extends Type {
 
     @Override
     public void __bool__(TVisitor v) {
-        v.err();
+        v.newValue(Type.BOOL, 2);
+        v.x86().movq(0, "8(%rax)");
+        v.x86().movq("%rax", "%rdi");
+        v.x86().ret();
     }
 
     @Override

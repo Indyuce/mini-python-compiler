@@ -1,5 +1,8 @@
 package mini_python;
 
+import mini_python.annotation.Delegated;
+import mini_python.exception.FunctionDelegatedError;
+
 public class string extends Type {
 
     @Override
@@ -89,7 +92,7 @@ public class string extends Type {
 
     @Override
     public void __not__(TVisitor v) {
-        // TODO
+        v.x86().jmp("__bool__not__"); // not(.) = not(bool(.))
     }
 
     @Override
@@ -98,8 +101,9 @@ public class string extends Type {
     }
 
     @Override
+    @Delegated(id = "__int__bool__")
     public void __bool__(TVisitor v) {
-        // TODO
+        throw new FunctionDelegatedError();
     }
 
     @Override

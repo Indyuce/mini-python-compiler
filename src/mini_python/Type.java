@@ -1,6 +1,7 @@
 package mini_python;
 
 import mini_python.annotation.Builtin;
+import mini_python.annotation.Delegated;
 import mini_python.annotation.NotNull;
 import mini_python.exception.CompileError;
 
@@ -114,7 +115,7 @@ public abstract class Type {
         for (Method method : Type.class.getDeclaredMethods())
             if (method.isAnnotationPresent(Builtin.class)) list.add(method);
 
-        System.out.println("Number of builtin methods inherited from object: "+ list.size());
+        System.out.println("Number of builtin methods inherited from object: " + list.size());
         return list;
     }
 
@@ -135,18 +136,15 @@ public abstract class Type {
         v.x86().movq("%rax", (getOffset() * 8) + "(" + Compile.TDA_REG + ")");
     }
 
-    /**
-     * When calling this method, address of type descriptor array
-     * is located in %rdi
-     */
     public void compileMethods(TVisitor v) {
         final Type nulled = REGISTERED.put(getOffset(), this);
         if (nulled != null) throw new CompileError("registered type with duplicate id " + getOffset());
 
         // Write methods
-        for (Method parent : METHODS) {
+        for (Method parent : METHODS)
             try {
                 final Method method = this.getClass().getDeclaredMethod(parent.getName(), TVisitor.class);
+                if (method.isAnnotationPresent(Delegated.class)) continue; // Method delegated to other type
 
                 // Label method in .text
                 v.x86().label(asmId(this, method));
@@ -154,14 +152,22 @@ public abstract class Type {
                 // Write method
                 method.invoke(this, v);
             } catch (Exception exception) {
-                exception.printStackTrace();
                 throw new CompileError("could not compile method " + parent.getName() + " from type " + name() + ": " + exception.getMessage());
             }
-        }
     }
 
     @NotNull
     private static String asmId(Type type, Method function) {
+
+        // Method delegation
+        try {
+            final Method submethod = type.getClass().getDeclaredMethod(function.getName());
+            final Delegated delegate = submethod.getAnnotation(Delegated.class);
+            if (delegate != null) delegate.id();
+        } catch (Exception exception) {
+            throw new CompileError("could not find method " + function.getName() + " from type " + type.name() + " for method delegation: " + exception.getMessage());
+        }
+
         return "__" + type.name() + function.getName();
     }
 

@@ -71,12 +71,20 @@ public class int64 extends Type {
 
     @Override
     public void __div__(TVisitor v) {
-        // TODO
+        binop(v, () -> {
+            v.x86().movq("%rdi", "%rax"); // dividend goes in %rax
+            v.x86().idivq("%rsi"); // divider goes in %rsi
+            v.x86().movq("%rax", "%rdi"); // quotient is placed in %rax
+        });
     }
 
     @Override
     public void __mod__(TVisitor v) {
-        // TODO
+        binop(v, () -> {
+            v.x86().movq("%rdi", "%rax");
+            v.x86().idivq("%rsi");
+            v.x86().movq("%rdx", "%rdi"); // remainder is placed in %rax
+        });
     }
 
     @Override
@@ -133,7 +141,7 @@ public class int64 extends Type {
 
     @Override
     public void __not__(TVisitor v) {
-        v.x86().jmp("__bool__not__"); // not(.) = not(bool(.)) if . is int
+        v.x86().jmp("__bool__not__"); // not(.) = not(bool(.))
     }
 
     @Override
@@ -147,7 +155,7 @@ public class int64 extends Type {
 
         v.x86().movq("8(%rdi)", "%r10");
         v.x86().notq("%r10");
-        v.x86().notq("%r10"); // not(not(.)) = bool(.)
+        v.x86().notq("%r10");
         v.x86().movq("%r10", "8(%rax)");
 
         v.x86().movq("%rax", "%rdi");
