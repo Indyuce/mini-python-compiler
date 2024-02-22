@@ -5,7 +5,7 @@ import mini_python.exception.NotImplementedError;
 public class string extends Type {
 
     @Override
-    public int ofs() {
+    public int getOffset() {
         return 3;
     }
 
@@ -91,6 +91,16 @@ public class string extends Type {
 
     @Override
     public void __not__(TVisitor v) {
+        // TODO
+    }
+
+    @Override
+    public void __int__(TVisitor v) {
+        v.err();
+    }
+
+    @Override
+    public void __bool__(TVisitor v) {
         // TODO
     }
 }

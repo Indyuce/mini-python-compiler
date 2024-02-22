@@ -1,7 +1,5 @@
 package mini_python;
 
-import mini_python.annotation.Extra;
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;

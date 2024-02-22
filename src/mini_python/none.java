@@ -5,7 +5,7 @@ public class none extends Type {
     public static final String NONE = "__none__None";
 
     @Override
-    public int ofs() {
+    public int getOffset() {
         return 0;
     }
 
@@ -17,7 +17,7 @@ public class none extends Type {
     @Override
     public void staticConstants(TVisitor v) {
         v.x86().dlabel(NONE);
-        v.x86().quad(ofs());
+        v.x86().quad(getOffset());
         v.x86().quad(0);
     }
 
@@ -88,11 +88,23 @@ public class none extends Type {
 
     @Override
     public void __neg__(TVisitor v) {
-        v.err();
+        // Not sure of that one
+        v.visit(new Cint(0));
+        v.x86().ret();
     }
 
     @Override
     public void __not__(TVisitor v) {
+        v.err();
+    }
+
+    @Override
+    public void __int__(TVisitor v) {
+        v.err();
+    }
+
+    @Override
+    public void __bool__(TVisitor v) {
         v.err();
     }
 }

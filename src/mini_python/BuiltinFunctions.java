@@ -18,9 +18,7 @@ public class BuiltinFunctions {
     @Builtin
     public static void __init__(TVisitor v) {
 
-        // Initialize type descriptor array
-        v.malloc(8 * Compile.TYPES.size()); // address in %rax
-        // TODO FOR NOW %r11 CONTAINS TYPE DESCRIPTOR ARRAY
+        v.malloc(8 * Compile.TYPES.size()); // Allocate memory for TDA
         v.x86().movq("%rax", Compile.TDA_REG);
 
         // Register types
@@ -28,6 +26,11 @@ public class BuiltinFunctions {
             type.compileInit(v);
 
         v.x86().jmp(Compile.LABEL_MAIN);
+    }
+
+    @Builtin
+    public static void __len__(TVisitor v) {
+        // TODO
     }
 
     @Builtin

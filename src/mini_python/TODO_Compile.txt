@@ -22,8 +22,6 @@ and       (e) logical and
 neg       ()  take opposite
 !         ()  logical not
 print     ()  PRINT IT BABY
-
-BUILT-IN FUNCTIONS
 len       () length of string/array
 
 #################################################################"
@@ -49,3 +47,8 @@ TDA     | padding | value
 %rdi = address to value in memory
 TDA     | length  | addr1   | addr2   | ... |
 8 bytes | 8 bytes | 8 bytes | 8 bytes | ... |
+
+
+LEAQ D(%x, %y, k), %r
+%r = %r + %y * k
+k=1,2,4,8

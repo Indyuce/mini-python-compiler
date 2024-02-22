@@ -1,13 +1,11 @@
 package mini_python;
 
-import mini_python.exception.NotImplementedError;
-
 public class bool extends Type {
 
     public static final String TRUE = "__bool__True", FALSE = "__bool__False";
 
     @Override
-    public int ofs() {
+    public int getOffset() {
         return 1;
     }
 
@@ -19,10 +17,10 @@ public class bool extends Type {
     @Override
     public void staticConstants(TVisitor v) {
         v.x86().dlabel(TRUE);
-        v.x86().quad(ofs());
+        v.x86().quad(getOffset());
         v.x86().quad(1);
         v.x86().dlabel(FALSE);
-        v.x86().quad(ofs());
+        v.x86().quad(getOffset());
         v.x86().quad(0);
     }
 
@@ -93,11 +91,35 @@ public class bool extends Type {
 
     @Override
     public void __neg__(TVisitor v) {
-        v.err();
+        // Compilation trick
+        v.x86().jmp("__int__neg__");
     }
 
     @Override
     public void __not__(TVisitor v) {
-        // TODO
+        v.newValue(Type.BOOL, 2);
+
+        v.x86().movq("8(%rdi)", "%r10");
+        v.x86().notq("%r10");
+        v.x86().movq("%r10", "8(%rax)");
+
+        v.x86().movq("%rax", "%rdi");
+        v.x86().ret();
+    }
+
+    @Override
+    public void __bool__(TVisitor v) {
+        v.x86().ret();
+    }
+
+    @Override
+    public void __int__(TVisitor v) {
+        v.newValue(Type.INT, 2);
+
+        v.x86().movq("8(%rdi)", "%r10");
+        v.x86().movq("%r10", "8(%rax)"); // Interpret byte-value as int
+
+        v.x86().movq("%rax", "%rdi");
+        v.x86().ret();
     }
 }

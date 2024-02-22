@@ -23,7 +23,7 @@ public abstract class Type {
     public static final Type NONE = new none(), BOOL = new bool(), INT = new int64(), STRING = new string(), LIST = new list();
 
 
-    public abstract int ofs();
+    public abstract int getOffset();
 
     public abstract String name();
 
@@ -74,13 +74,31 @@ public abstract class Type {
     @Builtin
     public abstract void __not__(TVisitor v);
 
+    @Builtin
+    public abstract void __int__(TVisitor v);
+
+    @Builtin
+    public abstract void __bool__(TVisitor v);
+
+    /**
+     * @implNote Completely arbitrary implementation. Offsets could be hard-coded, who cares
+     */
     public static int getOffset(String functionName) {
-        Method[] arr = Type.class.getDeclaredMethods();
+        final Method[] arr = Type.class.getDeclaredMethods();
 
         for (int c = 0; c < arr.length; c++)
-            if (arr[c].getName().equals(functionName)) return c;
+            if (arr[c].getName().equals(functionName)) return 8 * c;
 
         throw new CompileError("could not find offset of function '" + functionName + "'");
+    }
+
+    public static int getOffset(Enum element) {
+        for (Method method : Type.class.getDeclaredMethods()) {
+            final Builtin annot = method.getAnnotation(Builtin.class);
+            if (annot != null && method.getName().substring(2, method.getName().length() - 2).equals(element.name().toLowerCase().substring(1)))
+                return getOffset(method.getName());
+        }
+        throw new CompileError("could not find method corresponding to operator " + element.name());
     }
 
     private static final List<Method> METHODS = findMethods();
@@ -100,14 +118,13 @@ public abstract class Type {
         // Static constants if needed
         staticConstants(v);
 
-        // Write type descriptor in heap, write function addresses
-        v.malloc(METHODS.size() * 8);
+        v.malloc(METHODS.size() * 8); // Allocate memory for type descriptor
         int ofs = 0;
         for (Method function : METHODS)
             v.x86().movq(asmId(this, function), (8 * ofs++) + "(%rax)");
 
         // Write address to type descriptor in type descriptor array
-        v.x86().movq("%rax", (ofs() * 8) + "(" + Compile.TDA_REG + ")");
+        v.x86().movq("%rax", (getOffset() * 8) + "(" + Compile.TDA_REG + ")");
     }
 
     /**
@@ -115,8 +132,8 @@ public abstract class Type {
      * is located in %rdi
      */
     public void compileMethods(TVisitor v) {
-        final Type nulled = REGISTERED.put(ofs(), this);
-        if (nulled != null) throw new CompileError("registered type with duplicate id " + ofs());
+        final Type nulled = REGISTERED.put(getOffset(), this);
+        if (nulled != null) throw new CompileError("registered type with duplicate id " + getOffset());
 
         // Write methods
         for (Method parent : METHODS) {
@@ -133,15 +150,6 @@ public abstract class Type {
                 throw new CompileError("could not compile method " + parent.getName() + " from type " + name() + ": " + exception.getMessage());
             }
         }
-    }
-
-    public static int ofs(Enum element) {
-        for (Method method : Type.class.getDeclaredMethods()) {
-            final Builtin annot = method.getAnnotation(Builtin.class);
-            if (annot != null && method.getName().substring(2, method.getName().length() - 2).equals(element.name().toLowerCase().substring(1)))
-                return getOffset(method.getName());
-        }
-        throw new CompileError("could not find method corresponding to operator " + element.name());
     }
 
     @NotNull

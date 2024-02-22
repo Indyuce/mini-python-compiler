@@ -1,11 +1,9 @@
 package mini_python;
 
-import mini_python.exception.NotImplementedError;
-
 public class list extends Type {
 
     @Override
-    public int ofs() {
+    public int getOffset() {
         return 4;
     }
 
@@ -91,6 +89,16 @@ public class list extends Type {
 
     @Override
     public void __not__(TVisitor v) {
-        // TODO
+        // TODO convert to bool then not
+    }
+
+    @Override
+    public void __int__(TVisitor v) {
+        v.err();
+    }
+
+    @Override
+    public void __bool__(TVisitor v) {
+        // TODO [] = False, otherwise True
     }
 }

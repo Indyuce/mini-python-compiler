@@ -1,10 +1,11 @@
 package mini_python;
 
-import mini_python.annotation.Extra;
+import mini_python.annotation.Difference;
 import mini_python.annotation.NotNull;
-import mini_python.exception.TypeError;
+import mini_python.annotation.Saves;
 
 import java.util.LinkedList;
+import java.util.function.Consumer;
 
 /* Abstract Syntax of Mini-Python */
 
@@ -366,7 +367,7 @@ interface Visitor {
     /**
      * Function scope is needed when dealing with recursive functions
      */
-    @Extra
+    @Difference
     void setFunctionScope(Function func);
 
     /**
@@ -377,7 +378,7 @@ interface Visitor {
      * @return Return value. Throws an error if null
      */
     @NotNull
-    @Extra
+    @Difference
     <T> T ret(Class<T> returnType);
 
     void visit(Cnone c);
@@ -464,7 +465,7 @@ class Function {
     /**
      * Local variables of function
      */
-    @Extra
+    @Difference
     final LinkedList<Variable> local = new LinkedList<>();
 
     Function(Location loc, String name) {
@@ -595,7 +596,7 @@ class TElen extends TExpr {
     }
 }
 
-@Extra
+@Difference
 class TErange extends TExpr {
     final TExpr e;
 
@@ -770,16 +771,52 @@ class TFile {
 
 interface TVisitor {
 
-    @Extra
+    @Difference
     X86_64 x86();
 
-    @Extra
+    @Difference
     void malloc(int bytes);
 
-    @Extra
+    /**
+     * - Allocates bytes
+     * - Set type int
+     * <p>
+     * Address of new value is in %rax
+     */
+    @Saves(reg = {"%rdi", "%rsi"})
+    @Difference
+    void newValue(Type type, int bytes);
+
+    @Difference
     void err();
 
-    @Extra
+    @Difference
+    void objectFunctionCall(int offset);
+
+
+    /**
+     * Compiles a fragment of code that checks for given types.
+     * If the value in provided register is not one of the
+     * requested types, program will exit.
+     *
+     * @param register      Register pointing to value to check
+     * @param acceptedTypes Accepted types
+     */
+    @NotNull
+    @Difference
+    String ofType(String register, Type... acceptedTypes);
+
+    /**
+     * Saves frequently used caller-saved registers and wraps
+     * code inside of it
+     *
+     * @param code Code to perform while caller-saved registers are saved
+     * @param regs Registers to save
+     */
+    @Difference
+    void saveRegisters(Consumer<X86_64> code, String... regs);
+
+    @Difference
     void visit(TDef tdef);
 
     void visit(Cnone c);
@@ -804,7 +841,7 @@ interface TVisitor {
 
     void visit(TElist e);
 
-    @Extra
+    @Difference
     void visit(TErange e);
 
     void visit(TElen e);
@@ -824,8 +861,4 @@ interface TVisitor {
     void visit(TSeval s);
 
     void visit(TSset s);
-
-    @NotNull
-    @Extra
-    String ofType(int... acceptedTypes);
 }

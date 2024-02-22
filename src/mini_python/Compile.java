@@ -1,7 +1,7 @@
 package mini_python;
 
 import mini_python.annotation.Builtin;
-import mini_python.annotation.Extra;
+import mini_python.annotation.Difference;
 import mini_python.annotation.NotNull;
 import mini_python.exception.CompileError;
 import mini_python.exception.NotImplementedError;
@@ -9,6 +9,7 @@ import mini_python.exception.NotImplementedError;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class Compile {
 
@@ -38,7 +39,13 @@ public class Compile {
         return x86;
     }
 
-    public static final String TDA_REG = "%r11";
+    /**
+     * Callee-saved register which points toward the type
+     * descriptor array. Callee-saved so that NO C methods
+     * or system calls later kills this register. It is safe
+     * as long as we take the convention NEVER to use it.
+     */
+    public static final String TDA_REG = "%r15";
 
     // Labels reserved by the compiler
     public static final String LABEL_INIT = "__init__", LABEL_MAIN = "__main__";
@@ -101,10 +108,57 @@ class TVisitorImpl implements TVisitor {
         x86.call("__malloc__");
     }
 
-    @Extra
+    @Override
+    public void newValue(Type type, int bytes) {
+        saveRegisters(x86 -> malloc(bytes), "%rsi", "%rdi");
+        x86.movq(type.getOffset(), "0(%rax)");
+    }
+
+    @Override
+    public void objectFunctionCall(int offset) {
+        // %rdi = caller object
+        x86.movq("0(%rdi)", "%r10"); // %r10 = type identifier
+        x86.leaq("0(" + Compile.TDA_REG + ", %r10, )", "%r10"); // %r10 = address of type descriptor
+        x86.callstar(offset + "(%r10)"); // finally call corresponding method
+    }
+
+    @Override
+    public void saveRegisters(Consumer<X86_64> code, String... regs) {
+
+        // Push
+        for (int i = 0; i < regs.length; i++)
+            x86.pushq(regs[i]);
+
+        code.accept(x86);
+
+        // Pop
+        for (int i = 0; i < regs.length; i++)
+            x86.popq(regs[regs.length - 1 - i]);
+    }
+
+    @Difference
     @Override
     public void err() {
         x86.jmp("__err__");
+    }
+
+    @NotNull
+    @Override
+    public String ofType(String reg, Type... acceptedTypes) {
+        final String label = newTextLabel();
+
+        // Get type and check
+        x86.movq("0(" + reg + ")", "%r10");
+        for (Type accepted : acceptedTypes) {
+            x86.cmpq(accepted.getOffset(), "%r10");
+            x86.je(label);
+        }
+
+        // Error, exit program
+        err();
+
+        x86.label(label);
+        return label;
     }
 
     @Override
@@ -135,6 +189,7 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(Cbool c) {
+        // TODO change
             /*malloc(2);
             x86.data();
             x86.movq(1, "8(%rax)");
@@ -145,9 +200,10 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(Cstring c) {
+        // TODO change
         final String label = newDataLabel();
         x86.dlabel(label);
-        x86.quad(Type.STRING.ofs());
+        x86.quad(Type.STRING.getOffset());
         x86.quad(c.s.length());
         x86.string(c.s);
         x86.movq(label, "%rdi");
@@ -155,9 +211,10 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(Cint c) {
+        // TODO change
         final String label = newDataLabel();
         x86.dlabel(label);
-        x86.quad(Type.INT.ofs());
+        x86.quad(Type.INT.getOffset());
         x86.quad(c.i);
         x86.movq(label, "%rdi");
     }
@@ -185,19 +242,18 @@ class TVisitorImpl implements TVisitor {
     public void visit(TEbinop e) {
 
         e.e1.accept(this);
-        x86.pushq("%rdi"); // put &[e1] on stack
+        //x86.pushq("%rdi"); // put &[e1] on stack
 
-        // TODO check for laziness before compiling [e2]
+        // TODO laziness check before compiling [e2]
+        // TODO compile [e2]
 
-        final int ofs = Type.ofs(e.op) * 8;
-
-        x86.movq("0(%rdi)", "%r10"); // %r10 = type descriptor of type([e1])
-        x86.callstar(ofs + "(%r10)");
+        objectFunctionCall(Type.getOffset(e.op));
     }
 
     @Override
     public void visit(TEunop e) {
-        throw new NotImplementedError("not implemented");
+        e.e.accept(this); // %rdi = &[e1]
+        objectFunctionCall(Type.getOffset(e.op));
     }
 
     @Override
@@ -228,7 +284,11 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TElen e) {
-        throw new NotImplementedError("not implemented");
+        e.e.accept(this);
+        final int offset = Type.getOffset("__len__");
+        x86.movq("0(%rdi)", "%r10"); // %r10 = type identifier
+        x86.leaq("0(" + Compile.TDA_REG + ", %r10, 1)", "%r10"); // %r10 = address of type descriptor
+        x86.callstar(offset + "(%r10)");
     }
 
     @Override
@@ -272,28 +332,5 @@ class TVisitorImpl implements TVisitor {
     @Override
     public void visit(TSset s) {
         throw new NotImplementedError("not implemented");
-    }
-
-    /**
-     * @param acceptedTypes Types accepted.
-     * @return Code for checking type of
-     */
-    @NotNull
-    @Override
-    public String ofType(int... acceptedTypes) {
-        final String label = newTextLabel();
-
-        // Get type and check
-        x86.movq("0(%rdi)", "%r10");
-        for (int accepted : acceptedTypes) {
-            x86.cmpq(accepted, "%r10");
-            x86.je(label);
-        }
-
-        // Error, exit program
-        err();
-
-        x86.label(label);
-        return label;
     }
 }
