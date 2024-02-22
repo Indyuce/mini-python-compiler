@@ -1,8 +1,5 @@
 package mini_python;
 
-import mini_python.annotation.Delegated;
-import mini_python.exception.FunctionDelegatedError;
-
 public class none extends Type {
 
     public static final String
@@ -107,7 +104,10 @@ public class none extends Type {
 
     @Override
     public void __int__(TVisitor v) {
-        v.err();
+        v.newValue(Type.INT, 2);
+        v.x86().movq(0, "8(%rax)");
+        v.x86().movq("%rax", "%rdi");
+        v.x86().ret();
     }
 
     @Override
