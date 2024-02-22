@@ -35,50 +35,40 @@ public class int64 extends Type {
      */
     private void binop(TVisitor v, Runnable operation) {
 
-        // &[e2]
-        // &[e1]
-        // ....
-        v.x86().popq("%rsi"); // rdi = &[e1]
-        v.x86().popq("%rdi"); // rsi = &[e2]
-        v.x86().pushq("%rsi");
+        v.x86().popq("%rsi"); // pop &[e1]
+        v.x86().popq("%rdi"); // pop &[e2]
+        v.x86().pushq("%rsi"); // push &[e1] back for later
 
-        // int([e2])
-        final int offset = Type.getOffset("__int__");
+        v.objectFunctionCall(Type.getOffset("__int__")); // %rdi = &int([e2])
+        v.x86().movq("8(%rdi)", "%rsi"); // %rsi = int([e2])
+        v.x86().popq("%rdi"); // %rdi = &[e1]
+        v.x86().movq("8(%rdi)", "%rdi"); // %rdi = [e1]
 
-
-        // Get values
-        v.x86().movq("8(%rdi)", "%rdi"); // rdi = [e1]
-        v.x86().movq("8(%rsi)", "%rsi"); // rsi = [e2]
-
-        // Operation
-        operation.run(); // result in %rdi
+        operation.run(); // do operation, result in %rdi
 
         v.newValue(Type.INT, 2);
-        v.x86().movq("%rdi", "8(%rax)"); // put value at rax+8
+        v.x86().movq("%rdi", "8(%rax)"); // put value at %rax+8
         v.x86().movq("%rax", "%rdi"); // put address in %rdi
+        v.x86().ret();
     }
 
     private void comp(TVisitor v, Runnable operation) {
 
-        // Make sure it's int
-        v.ofType("%rsi", Type.INT);
+        v.x86().popq("%rsi"); // pop &[e1]
+        v.x86().popq("%rdi"); // pop &[e2]
+        v.x86().pushq("%rsi"); // push &[e1] back for later
 
-        // &[e2]
-        // &[e1]
-        // ....
-        v.x86().popq("%rdi"); // rdi = &[e1]
-        v.x86().popq("%rsi"); // rsi = &[e2]
+        v.objectFunctionCall(Type.getOffset("__int__")); // %rdi = &int([e2])
+        v.x86().movq("8(%rdi)", "%rsi"); // %rsi = int([e2])
+        v.x86().popq("%rdi"); // %rdi = &[e1]
+        v.x86().movq("8(%rdi)", "%rdi"); // %rdi = [e1]
 
-        // Get values
-        v.x86().movq("8(%rdi)", "%rdi"); // rdi = [e1]
-        v.x86().movq("8(%rsi)", "%rsi"); // rsi = [e2]
-
-        // Operation
-        operation.run(); // result in %rdi
+        // TODO
 
         v.newValue(Type.INT, 2);
-        v.x86().movq("%rdi", "8(%rax)"); // put value at rax+8
+        v.x86().movq("%rdi", "8(%rax)"); // put value at %rax+8
         v.x86().movq("%rax", "%rdi"); // put address in %rdi
+        v.x86().ret();
     }
 
     @Override
@@ -160,8 +150,7 @@ public class int64 extends Type {
 
     @Override
     public void __not__(TVisitor v) {
-        // Compilation trick
-        v.x86().jmp("__bool__not__");
+        v.x86().jmp("__bool__not__"); // not(.) = not(bool(.)) if . is int
     }
 
     @Override
@@ -175,8 +164,8 @@ public class int64 extends Type {
 
         v.x86().movq("8(%rdi)", "%r10");
         v.x86().notq("%r10");
-        v.x86().notq("%r10");
-        v.x86().movq("%r10", "8(%rdi)");
+        v.x86().notq("%r10"); // not(not(.)) = bool(.)
+        v.x86().movq("%r10", "8(%rax)");
 
         v.x86().movq("%rax", "%rdi");
         v.x86().ret();

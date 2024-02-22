@@ -92,7 +92,7 @@ public class bool extends Type {
     @Override
     public void __neg__(TVisitor v) {
         // Compilation trick
-        v.x86().jmp("__int__neg__");
+        v.x86().jmp("__int__neg__"); // neg(.) = neg(int(.)) if . is bool
     }
 
     @Override

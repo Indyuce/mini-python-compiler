@@ -48,7 +48,7 @@ public class Compile {
     public static final String TDA_REG = "%r15";
 
     // Labels reserved by the compiler
-    public static final String LABEL_INIT = "__init__", LABEL_MAIN = "__main__";
+    public static final String LABEL_INIT = "main", LABEL_MAIN = "__main__";
 
     //endregion
 
@@ -189,7 +189,6 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(Cbool c) {
-        // TODO change
             /*malloc(2);
             x86.data();
             x86.movq(1, "8(%rax)");
@@ -200,23 +199,21 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(Cstring c) {
-        // TODO change
         final String label = newDataLabel();
         x86.dlabel(label);
         x86.quad(Type.STRING.getOffset());
         x86.quad(c.s.length());
         x86.string(c.s);
-        x86.movq(label, "%rdi");
+        x86.movq("$" + label, "%rdi");
     }
 
     @Override
     public void visit(Cint c) {
-        // TODO change
         final String label = newDataLabel();
         x86.dlabel(label);
         x86.quad(Type.INT.getOffset());
         x86.quad(c.i);
-        x86.movq(label, "%rdi");
+        x86.movq("$" + label, "%rdi");
     }
 
     @Override
@@ -309,6 +306,7 @@ class TVisitorImpl implements TVisitor {
     @Override
     public void visit(TSprint s) {
         s.e.accept(this);
+        x86.addq("$16", "%rdi");
         x86.movq("$0", "%rax");
         x86.call("printf");
     }

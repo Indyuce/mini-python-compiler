@@ -88,9 +88,7 @@ public class none extends Type {
 
     @Override
     public void __neg__(TVisitor v) {
-        // Not sure of that one
-        v.visit(new Cint(0));
-        v.x86().ret();
+        v.err();
     }
 
     @Override

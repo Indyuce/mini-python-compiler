@@ -120,8 +120,11 @@ public abstract class Type {
 
         v.malloc(METHODS.size() * 8); // Allocate memory for type descriptor
         int ofs = 0;
-        for (Method function : METHODS)
-            v.x86().movq(asmId(this, function), (8 * ofs++) + "(%rax)");
+        for (Method function : METHODS) {
+            final String functionId = asmId(this, function);
+            v.x86().movq("$" + functionId, "%rdi");
+            v.x86().movq("%rdi", (8 * ofs++) + "(%rax)");
+        }
 
         // Write address to type descriptor in type descriptor array
         v.x86().movq("%rax", (getOffset() * 8) + "(" + Compile.TDA_REG + ")");

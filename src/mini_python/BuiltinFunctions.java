@@ -16,7 +16,7 @@ public class BuiltinFunctions {
     }
 
     @Builtin
-    public static void __init__(TVisitor v) {
+    public static void main(TVisitor v) {
 
         v.malloc(8 * Compile.TYPES.size()); // Allocate memory for TDA
         v.x86().movq("%rax", Compile.TDA_REG);
