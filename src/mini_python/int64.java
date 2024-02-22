@@ -5,6 +5,10 @@ package mini_python;
  */
 public class int64 extends Type {
 
+    public static final String
+            PRINT_FORMAT_LABEL = "__int__print__fmt__",
+            PRINT_FORMAT_VALUE = "%d";
+
     @Override
     public int getOffset() {
         return 2;
@@ -17,7 +21,8 @@ public class int64 extends Type {
 
     @Override
     public void staticConstants(TVisitor v) {
-
+        v.x86().dlabel(PRINT_FORMAT_LABEL);
+        v.x86().string(PRINT_FORMAT_VALUE);
     }
 
     /**
@@ -168,6 +173,15 @@ public class int64 extends Type {
         v.x86().movq("%r10", "8(%rax)");
 
         v.x86().movq("%rax", "%rdi");
+        v.x86().ret();
+    }
+
+    @Override
+    public void __print__(TVisitor v) {
+        v.x86().movq("8(%rdi)", "%rsi"); // extract byte value in %rsi
+        v.x86().movq("$" + PRINT_FORMAT_LABEL, "%rdi");
+        v.x86().xorq("%rax", "%rax");
+        v.x86().call("printf");
         v.x86().ret();
     }
 }

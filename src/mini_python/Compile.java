@@ -1,7 +1,6 @@
 package mini_python;
 
 import mini_python.annotation.Builtin;
-import mini_python.annotation.Difference;
 import mini_python.annotation.NotNull;
 import mini_python.exception.CompileError;
 import mini_python.exception.NotImplementedError;
@@ -116,9 +115,9 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void objectFunctionCall(int offset) {
-        // %rdi = caller object
+        // %rdi = &[e]
         x86.movq("0(%rdi)", "%r10"); // %r10 = type identifier
-        x86.leaq("0(" + Compile.TDA_REG + ", %r10, )", "%r10"); // %r10 = address of type descriptor
+        x86.leaq("(" + Compile.TDA_REG + ", %r10, 8)", "%r10"); // %r10 = address of type descriptor
         x86.callstar(offset + "(%r10)"); // finally call corresponding method
     }
 
@@ -136,7 +135,6 @@ class TVisitorImpl implements TVisitor {
             x86.popq(regs[regs.length - 1 - i]);
     }
 
-    @Difference
     @Override
     public void err() {
         x86.jmp("__err__");
@@ -261,6 +259,7 @@ class TVisitorImpl implements TVisitor {
     @Override
     public void visit(TEcall e) {
         // Use name of function for call
+        // TODO parameters
         x86.call(e.f.name);
     }
 
@@ -281,11 +280,7 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TElen e) {
-        e.e.accept(this);
-        final int offset = Type.getOffset("__len__");
-        x86.movq("0(%rdi)", "%r10"); // %r10 = type identifier
-        x86.leaq("0(" + Compile.TDA_REG + ", %r10, 1)", "%r10"); // %r10 = address of type descriptor
-        x86.callstar(offset + "(%r10)");
+        // TODO
     }
 
     @Override
@@ -305,10 +300,8 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TSprint s) {
-        s.e.accept(this);
-        x86.addq("$16", "%rdi");
-        x86.movq("$0", "%rax");
-        x86.call("printf");
+        s.e.accept(this); // %rdi = &[e]
+        objectFunctionCall(Type.getOffset("__print__"));
     }
 
     @Override

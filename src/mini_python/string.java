@@ -1,7 +1,5 @@
 package mini_python;
 
-import mini_python.exception.NotImplementedError;
-
 public class string extends Type {
 
     @Override
@@ -102,5 +100,13 @@ public class string extends Type {
     @Override
     public void __bool__(TVisitor v) {
         // TODO
+    }
+
+    @Override
+    public void __print__(TVisitor v) {
+        v.x86().addq("$16", "%rdi");
+        v.x86().xorq("%rax", "%rax");
+        v.x86().call("printf");
+        v.x86().ret();
     }
 }

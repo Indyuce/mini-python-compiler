@@ -80,24 +80,28 @@ public abstract class Type {
     @Builtin
     public abstract void __bool__(TVisitor v);
 
+    @Builtin
+    public abstract void __print__(TVisitor v);
+
     /**
      * @implNote Completely arbitrary implementation. Offsets could be hard-coded, who cares
      */
     public static int getOffset(String functionName) {
-        final Method[] arr = Type.class.getDeclaredMethods();
 
-        for (int c = 0; c < arr.length; c++)
-            if (arr[c].getName().equals(functionName)) return 8 * c;
+        for (int c = 0; c < METHODS.size(); c++)
+            if (METHODS.get(c).getName().equals(functionName)) return 8 * c;
 
         throw new CompileError("could not find offset of function '" + functionName + "'");
     }
 
     public static int getOffset(Enum element) {
-        for (Method method : Type.class.getDeclaredMethods()) {
-            final Builtin annot = method.getAnnotation(Builtin.class);
-            if (annot != null && method.getName().substring(2, method.getName().length() - 2).equals(element.name().toLowerCase().substring(1)))
-                return getOffset(method.getName());
+        int c = 0;
+        for (Method method : METHODS) {
+            if (method.getName().substring(2, method.getName().length() - 2).equals(element.name().toLowerCase().substring(1)))
+                return 8 * c;
+            c++;
         }
+
         throw new CompileError("could not find method corresponding to operator " + element.name());
     }
 

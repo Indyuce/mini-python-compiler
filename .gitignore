@@ -3,5 +3,4 @@
 bin/
 *.iml
 out
-test.py
 test.s

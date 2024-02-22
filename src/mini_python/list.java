@@ -101,4 +101,9 @@ public class list extends Type {
     public void __bool__(TVisitor v) {
         // TODO [] = False, otherwise True
     }
+
+    @Override
+    public void __print__(TVisitor v) {
+        // TODO
+    }
 }

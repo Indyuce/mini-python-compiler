@@ -2,7 +2,10 @@ package mini_python;
 
 public class none extends Type {
 
-    public static final String NONE = "__none__None";
+    public static final String
+            NONE = "__none__None__",
+            NONE_STR_LABEL = "__none__None__str__",
+            NONE_STR_VALUE = "None";
 
     @Override
     public int getOffset() {
@@ -19,6 +22,9 @@ public class none extends Type {
         v.x86().dlabel(NONE);
         v.x86().quad(getOffset());
         v.x86().quad(0);
+
+        v.x86().dlabel(NONE_STR_LABEL);
+        v.x86().string(NONE_STR_VALUE);
     }
 
     @Override
@@ -104,5 +110,13 @@ public class none extends Type {
     @Override
     public void __bool__(TVisitor v) {
         v.err();
+    }
+
+    @Override
+    public void __print__(TVisitor v) {
+        v.x86().movq("$" + NONE_STR_LABEL, "%rdi");
+        v.x86().movq("$0", "%rax");
+        v.x86().call("printf");
+        v.x86().ret();
     }
 }

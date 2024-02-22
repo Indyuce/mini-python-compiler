@@ -2,7 +2,13 @@ package mini_python;
 
 public class bool extends Type {
 
-    public static final String TRUE = "__bool__True", FALSE = "__bool__False";
+    public static final String
+            TRUE = "__bool__True",
+            TRUE_STR_LABEL = "__bool__True__str__",
+            TRUE_STR_VALUE = "True",
+            FALSE = "__bool__False",
+            FALSE_STR_LABEL = "__bool__False__str__",
+            FALSE_STR_VALUE = "False";
 
     @Override
     public int getOffset() {
@@ -19,9 +25,16 @@ public class bool extends Type {
         v.x86().dlabel(TRUE);
         v.x86().quad(getOffset());
         v.x86().quad(1);
+
         v.x86().dlabel(FALSE);
         v.x86().quad(getOffset());
         v.x86().quad(0);
+
+        v.x86().dlabel(TRUE_STR_LABEL);
+        v.x86().string(TRUE_STR_VALUE);
+
+        v.x86().dlabel(FALSE_STR_LABEL);
+        v.x86().string(FALSE_STR_VALUE);
     }
 
     @Override
@@ -109,6 +122,23 @@ public class bool extends Type {
 
     @Override
     public void __bool__(TVisitor v) {
+        v.x86().ret();
+    }
+
+    @Override
+    public void __print__(TVisitor v) {
+        // %rdi = &[e]
+        v.x86().cmpq(0, "8(%rdi)");
+        v.x86().je("__bool__print__neg__");
+        v.x86().movq("$" + TRUE_STR_LABEL, "%rdi");
+        v.x86().jmp("__bool__print__nxt__");
+
+        v.x86().label("__bool__print__neg__");
+        v.x86().movq("$" + FALSE_STR_LABEL, "%rdi");
+
+        v.x86().label("__bool__print__nxt__");
+        v.x86().movq("$0", "%rax");
+        v.x86().call("printf");
         v.x86().ret();
     }
 
