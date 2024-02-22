@@ -1,5 +1,8 @@
 package mini_python;
 
+import mini_python.annotation.Delegated;
+import mini_python.exception.FunctionDelegatedError;
+
 /**
  * int is not a valid class name but it really is an int
  */
@@ -140,8 +143,9 @@ public class int64 extends Type {
     }
 
     @Override
+    @Delegated(id = "__bool__not__")
     public void __not__(TVisitor v) {
-        v.x86().jmp("__bool__not__"); // not(.) = not(bool(.))
+        throw new FunctionDelegatedError();
     }
 
     @Override

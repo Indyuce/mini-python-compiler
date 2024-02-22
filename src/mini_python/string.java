@@ -91,8 +91,9 @@ public class string extends Type {
     }
 
     @Override
+    @Delegated(id = "__bool__not__")
     public void __not__(TVisitor v) {
-        v.x86().jmp("__bool__not__"); // not(.) = not(bool(.))
+        throw new FunctionDelegatedError();
     }
 
     @Override
