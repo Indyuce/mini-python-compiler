@@ -26,30 +26,23 @@ public class int64 extends Type {
     }
 
     /**
-     * This wraps the provided code into the following instructions
-     * - pop addresses to values from the stack
-     * - check that second argument is of type int
-     * - execute code
-     * - allocate space on heap for new int value
-     * - put new value address in %rdi
+     * %rdi = 1st arg, object caller
+     * %rsi = 2nd arg
      *
-     * @param v         Visitor
-     * @param operation Code corresponding to operation where
-     *                  [e1] is in %rdi and [e2] is in %rsi.
-     *                  Result must be in %rdi
+     * @param v         Visitor I guess
+     * @param operation Code corresponding to arithmetic operation where
+     *                  [e1] is in %rdi and [e2] is in %rsi. Result must
+     *                  be placed inside %rdi
      */
     private void binop(TVisitor v, Runnable operation) {
-
-        v.x86().popq("%rsi"); // pop &[e1]
-        v.x86().popq("%rdi"); // pop &[e2]
-        v.x86().pushq("%rsi"); // push &[e1] back for later
-
-        v.objectFunctionCall(Type.getOffset("__int__")); // %rdi = &int([e2])
-        v.x86().movq("8(%rdi)", "%rsi"); // %rsi = int([e2])
-        v.x86().popq("%rdi"); // %rdi = &[e1]
+        v.saveRegisters(x86 -> {
+            v.x86().movq("%rsi", "%rdi");
+            v.objectFunctionCall(Type.getOffset("__int__")); // %rdi = &int([e2])
+            v.x86().movq("8(%rdi)", "%rsi"); // %rsi = int([e2])
+        }, "%rdi");
         v.x86().movq("8(%rdi)", "%rdi"); // %rdi = [e1]
 
-        operation.run(); // do operation, result in %rdi
+        operation.run();
 
         v.newValue(Type.INT, 2);
         v.x86().movq("%rdi", "8(%rax)"); // put value at %rax+8
@@ -58,22 +51,7 @@ public class int64 extends Type {
     }
 
     private void comp(TVisitor v, Runnable operation) {
-
-        v.x86().popq("%rsi"); // pop &[e1]
-        v.x86().popq("%rdi"); // pop &[e2]
-        v.x86().pushq("%rsi"); // push &[e1] back for later
-
-        v.objectFunctionCall(Type.getOffset("__int__")); // %rdi = &int([e2])
-        v.x86().movq("8(%rdi)", "%rsi"); // %rsi = int([e2])
-        v.x86().popq("%rdi"); // %rdi = &[e1]
-        v.x86().movq("8(%rdi)", "%rdi"); // %rdi = [e1]
-
         // TODO
-
-        v.newValue(Type.INT, 2);
-        v.x86().movq("%rdi", "8(%rax)"); // put value at %rax+8
-        v.x86().movq("%rax", "%rdi"); // put address in %rdi
-        v.x86().ret();
     }
 
     @Override

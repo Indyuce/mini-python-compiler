@@ -3,7 +3,7 @@ package mini_python;
 public class none extends Type {
 
     public static final String
-            NONE = "__none__None__",
+            NONE_LABEL = "__none__None__",
             NONE_STR_LABEL = "__none__None__str__",
             NONE_STR_VALUE = "None";
 
@@ -19,7 +19,7 @@ public class none extends Type {
 
     @Override
     public void staticConstants(TVisitor v) {
-        v.x86().dlabel(NONE);
+        v.x86().dlabel(NONE_LABEL);
         v.x86().quad(getOffset());
         v.x86().quad(0);
 

@@ -118,6 +118,7 @@ class TVisitorImpl implements TVisitor {
         // %rdi = &[e]
         x86.movq("0(%rdi)", "%r10"); // %r10 = type identifier
         x86.leaq("(" + Compile.TDA_REG + ", %r10, 8)", "%r10"); // %r10 = address of type descriptor
+        x86.movq("(%r10)", "%r10"); // %r10 = type descriptor
         x86.callstar(offset + "(%r10)"); // finally call corresponding method
     }
 
@@ -182,7 +183,7 @@ class TVisitorImpl implements TVisitor {
             x86.movq("0", "8(%rax)");
             x86.movq("%rax", "%rdi");*/
 
-        x86.movq(none.NONE, "%rdi");
+        x86.movq("$" + none.NONE_LABEL, "%rdi");
     }
 
     @Override
@@ -192,7 +193,7 @@ class TVisitorImpl implements TVisitor {
             x86.movq(1, "8(%rax)");
             x86.movq("%rax", "%rdi");*/
 
-        x86.movq(c.b ? bool.TRUE : bool.FALSE, "%rdi");
+        x86.movq("$" + (c.b ? bool.TRUE_LABEL : bool.FALSE_LABEL), "%rdi");
     }
 
     @Override
@@ -223,24 +224,26 @@ class TVisitorImpl implements TVisitor {
         else throw new CompileError("unsupported constant type");
     }
 
-      /*  private boolean isLazy(Binop binop) {
-            return binop == Binop.Bor || binop == Binop.Band;
-        }*/
-
-    /**
-     * Binary operators are compiled this way:
-     * - Address of value of first argument is put in %rdi
-     * - Method corresponding to binop retrieved from type descriptor of *%rdi
-     * - Method is called placing result in %rdi
-     */
     @Override
     public void visit(TEbinop e) {
 
+        // Result in %rdi
         e.e1.accept(this);
-        //x86.pushq("%rdi"); // put &[e1] on stack
 
-        // TODO laziness check before compiling [e2]
-        // TODO compile [e2]
+        switch (e.op) {
+            case Bor -> {
+                // TODO lazy or
+            }
+            case Band -> {
+                // TODO lazy and
+            }
+            default -> {
+                saveRegisters(x86 -> {
+                    e.e2.accept(this);
+                    x86.movq("%rdi", "%rsi");
+                }, "%rdi");
+            }
+        }
 
         objectFunctionCall(Type.getOffset(e.op));
     }
@@ -317,7 +320,7 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TSeval s) {
-        throw new NotImplementedError("not implemented");
+        s.e.accept(this);
     }
 
     @Override

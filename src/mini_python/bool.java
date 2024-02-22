@@ -3,10 +3,10 @@ package mini_python;
 public class bool extends Type {
 
     public static final String
-            TRUE = "__bool__True",
+            TRUE_LABEL = "__bool__True",
             TRUE_STR_LABEL = "__bool__True__str__",
             TRUE_STR_VALUE = "True",
-            FALSE = "__bool__False",
+            FALSE_LABEL = "__bool__False",
             FALSE_STR_LABEL = "__bool__False__str__",
             FALSE_STR_VALUE = "False";
 
@@ -22,11 +22,11 @@ public class bool extends Type {
 
     @Override
     public void staticConstants(TVisitor v) {
-        v.x86().dlabel(TRUE);
+        v.x86().dlabel(TRUE_LABEL);
         v.x86().quad(getOffset());
         v.x86().quad(1);
 
-        v.x86().dlabel(FALSE);
+        v.x86().dlabel(FALSE_LABEL);
         v.x86().quad(getOffset());
         v.x86().quad(0);
 
@@ -39,7 +39,7 @@ public class bool extends Type {
 
     @Override
     public void __add__(TVisitor v) {
-        // TODO
+        v.err();
     }
 
     @Override
