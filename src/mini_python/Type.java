@@ -61,12 +61,6 @@ public abstract class Type {
     public abstract void __ge__(TVisitor v);
 
     @Builtin
-    public abstract void __and__(TVisitor v);
-
-    @Builtin
-    public abstract void __or__(TVisitor v);
-
-    @Builtin
     public abstract void __neg__(TVisitor v);
 
     @Builtin

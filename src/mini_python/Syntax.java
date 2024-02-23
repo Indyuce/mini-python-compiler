@@ -5,7 +5,7 @@ import mini_python.annotation.NotNull;
 import mini_python.annotation.Saves;
 
 import java.util.LinkedList;
-import java.util.function.Consumer;
+import java.util.Objects;
 
 /* Abstract Syntax of Mini-Python */
 
@@ -449,6 +449,21 @@ class Variable {
 
     static Variable mkVariable(String name) {
         return new Variable(name, id++);
+    }
+
+    @Difference
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Variable variable = (Variable) o;
+        return uid == variable.uid;
+    }
+
+    @Difference
+    @Override
+    public int hashCode() {
+        return Objects.hash(uid);
     }
 }
 

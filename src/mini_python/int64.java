@@ -122,7 +122,7 @@ public class int64 extends Type {
         v.x86().je(__EQ__POS__);
         v.x86().cmpq(Type.BOOL.getOffset(), "%r10");
         v.x86().je(__EQ__POS__);
-        v.x86().movq(bool.FALSE_LABEL, "%rdi");
+        v.x86().movq("$" + bool.FALSE_LABEL, "%rdi");
         v.x86().ret();
 
         // Check value
@@ -143,7 +143,7 @@ public class int64 extends Type {
         v.x86().je(__NEQ__POS__);
         v.x86().cmpq(Type.BOOL.getOffset(), "%r10");
         v.x86().je(__NEQ__POS__);
-        v.x86().movq(bool.TRUE_LABEL, "%rdi");
+        v.x86().movq("$" + bool.TRUE_LABEL, "%rdi");
         v.x86().ret();
 
         // Check value
@@ -184,16 +184,6 @@ public class int64 extends Type {
             v.x86().cmpq("%rsi", "%rdi");
             v.x86().setge("%cl");
         });
-    }
-
-    @Override
-    public void __and__(TVisitor v) {
-        // TODO
-    }
-
-    @Override
-    public void __or__(TVisitor v) {
-        // TODO
     }
 
     @Override

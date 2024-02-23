@@ -76,16 +76,6 @@ public class list extends Type {
     }
 
     @Override
-    public void __and__(TVisitor v) {
-        // TODO
-    }
-
-    @Override
-    public void __or__(TVisitor v) {
-        // TODO
-    }
-
-    @Override
     public void __neg__(TVisitor v) {
         v.err();
     }

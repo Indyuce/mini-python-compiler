@@ -83,16 +83,6 @@ public class none extends Type {
     }
 
     @Override
-    public void __and__(TVisitor v) {
-        v.err();
-    }
-
-    @Override
-    public void __or__(TVisitor v) {
-        v.err();
-    }
-
-    @Override
     public void __neg__(TVisitor v) {
         v.err();
     }

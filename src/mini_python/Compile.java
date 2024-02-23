@@ -238,13 +238,22 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TEbinop e) {
-
-        // Result in %rdi
-        e.e1.accept(this);
+        e.e1.accept(this); // %rdi = &[e1]
 
         switch (e.op) {
             case Bor -> {
-                // TODO lazy or
+                final String lblneg = newTextLabel(), lblnxt = newTextLabel();
+                objectFunctionCall(Type.getOffset("__bool__")); // %rdi = &bool([e1])
+                x86.cmpq(0, "8(%rdi)");
+                x86.je(lblneg);
+                x86.movq("$" + bool.TRUE_LABEL, "%rdi"); // lazy or, early stop
+                x86.jmp(lblnxt);
+
+                x86.label(lblneg);
+                e.e2.accept(this); // %rdi = &[e2]
+                objectFunctionCall(Type.getOffset("__bool__")); // %rdi = &bool([e2])
+
+                x86.label(lblnxt);
             }
             case Band -> {
                 // TODO lazy and
@@ -254,10 +263,10 @@ class TVisitorImpl implements TVisitor {
                     e.e2.accept(this);
                     x86.movq("%rdi", "%rsi");
                 }, "%rdi");
+
+                objectFunctionCall(Type.getOffset(e.op));
             }
         }
-
-        objectFunctionCall(Type.getOffset(e.op));
     }
 
     @Override
