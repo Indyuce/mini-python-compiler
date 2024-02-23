@@ -47,7 +47,7 @@ public class int64 extends Type {
 
         operation.run();
 
-        v.saveRegisters(() -> v.newValue(Type.INT, 2), "%rdi");
+        v.saveRegisters(() -> v.newValue(Type.INT, 16), "%rdi");
         v.x86().movq("%rdi", "8(%rax)"); // put value at %rax+8
         v.x86().ret();
     }
@@ -72,7 +72,7 @@ public class int64 extends Type {
         operation.run();
         v.x86().movzbq("%cl", "%r10");
 
-        v.saveRegisters(() -> v.newValue(Type.BOOL, 2), "%r10");
+        v.saveRegisters(() -> v.newValue(Type.BOOL, 16), "%r10");
         v.x86().movq("%r10", "8(%rax)"); // put value at %rax+8
         v.x86().ret();
     }
@@ -186,7 +186,7 @@ public class int64 extends Type {
 
     @Override
     public void __neg__(TVisitor v) {
-        v.saveRegisters(() -> v.newValue(Type.INT, 2), "%rdi");
+        v.saveRegisters(() -> v.newValue(Type.INT, 16), "%rdi");
 
         v.x86().movq("8(%rdi)", "%r10");
         v.x86().negq("%r10");
@@ -208,7 +208,7 @@ public class int64 extends Type {
 
     @Override
     public void __bool__(TVisitor v) {
-        v.saveRegisters(() -> v.newValue(Type.BOOL, 2), "%rdi");
+        v.saveRegisters(() -> v.newValue(Type.BOOL, 16), "%rdi");
 
         v.x86().cmpq(0, "8(%rdi)");
         v.x86().setne("%cl");

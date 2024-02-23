@@ -108,7 +108,7 @@ public class bool extends Type {
 
     @Override
     public void __not__(TVisitor v) {
-        v.saveRegisters(() -> v.newValue(Type.BOOL, 2), "%rdi");
+        v.saveRegisters(() -> v.newValue(Type.BOOL, 16), "%rdi");
 
         v.x86().cmpq(0, "8(%rdi)");
         v.x86().sete("%cl");
@@ -142,7 +142,7 @@ public class bool extends Type {
 
     @Override
     public void __int__(TVisitor v) {
-        v.saveRegisters(() -> v.newValue(Type.INT, 2), "%rdi");
+        v.saveRegisters(() -> v.newValue(Type.INT, 16), "%rdi");
 
         v.x86().movq("8(%rdi)", "%r10");
         v.x86().movq("%r10", "8(%rax)"); // Interpret byte-value as int

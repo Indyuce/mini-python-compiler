@@ -95,7 +95,7 @@ public class none extends Type {
 
     @Override
     public void __int__(TVisitor v) {
-        v.newValue(Type.INT, 2);
+        v.newValue(Type.INT, 16);
         v.x86().movq(0, "8(%rax)");  // Hardcoded write 0
         v.x86().ret();
     }

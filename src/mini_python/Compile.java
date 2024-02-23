@@ -322,7 +322,7 @@ class TVisitorImpl implements TVisitor {
     @Override
     public void visit(TElist e) {
         saveRegisters(() -> {
-            final int bytes = 2 + e.l.size();
+            final int bytes = 16 + 8 * e.l.size();
             newValue(Type.LIST, bytes);
             x86.movq("%rax", "%r12");
             x86.movq(e.l.size(), "8(%r12)");

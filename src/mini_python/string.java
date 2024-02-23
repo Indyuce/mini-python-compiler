@@ -94,7 +94,7 @@ public class string extends Type {
         v.x86().addq("$16", "%rsi");
         v.x86().call("__strcmp__");
         v.x86().setz("%cl");
-        v.saveRegisters(() -> v.newValue(Type.BOOL, 2), "%rcx");
+        v.saveRegisters(() -> v.newValue(Type.BOOL, 16), "%rcx");
         v.x86().movzbq("%cl", "%r10");
         v.x86().movq("%r10", "8(%rax)");
         v.x86().ret();
@@ -115,7 +115,7 @@ public class string extends Type {
         v.x86().addq("$16", "%rsi");
         v.x86().call("__strcmp__");
         v.x86().setnz("%cl");
-        v.saveRegisters(() -> v.newValue(Type.BOOL, 2), "%rcx");
+        v.saveRegisters(() -> v.newValue(Type.BOOL, 16), "%rcx");
         v.x86().movzbq("%cl", "%r10");
         v.x86().movq("%r10", "8(%rax)");
         v.x86().ret();
@@ -135,7 +135,7 @@ public class string extends Type {
         v.x86().addq("$16", "%rsi");
         v.x86().call("__strcmp__");
         code.run();
-        v.saveRegisters(() -> v.newValue(Type.BOOL, 2), "%rcx");
+        v.saveRegisters(() -> v.newValue(Type.BOOL, 16), "%rcx");
         v.x86().movzbq("%cl", "%r10");
         v.x86().movq("%r10", "8(%rax)");
         v.x86().ret();

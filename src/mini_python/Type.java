@@ -116,7 +116,7 @@ public abstract class Type {
         // Static constants if needed
         staticConstants(v);
 
-        v.malloc(METHODS.size() * 8); // Allocate memory for type descriptor
+        v.malloc(8 * METHODS.size()); // Allocate memory for type descriptor
         int ofs = 0;
         for (Method function : METHODS) {
             final String functionId = asmId(this, function);
