@@ -10,7 +10,8 @@ public class int64 extends Type {
 
     public static final String
             PRINT_FORMAT_LABEL = "__int__print__fmt__",
-            PRINT_FORMAT_VALUE = "%d";
+            PRINT_FORMAT_VALUE = "%d",
+            ZERO = "__int__zero__";
 
     @Override
     public int getOffset() {
@@ -26,6 +27,10 @@ public class int64 extends Type {
     public void staticConstants(TVisitor v) {
         v.x86().dlabel(PRINT_FORMAT_LABEL);
         v.x86().string(PRINT_FORMAT_VALUE);
+
+        v.x86().dlabel(ZERO);
+        v.x86().quad(Type.INT.getOffset());
+        v.x86().quad(0);
     }
 
     /**
@@ -203,6 +208,7 @@ public class int64 extends Type {
 
     @Override
     public void __int__(TVisitor v) {
+        v.x86().movq("%rdi", "%rax");
         v.x86().ret();
     }
 

@@ -26,11 +26,11 @@ public class bool extends Type {
     @Override
     public void staticConstants(TVisitor v) {
         v.x86().dlabel(TRUE_LABEL);
-        v.x86().quad(getOffset());
+        v.x86().quad(Type.BOOL.getOffset());
         v.x86().quad(1);
 
         v.x86().dlabel(FALSE_LABEL);
-        v.x86().quad(getOffset());
+        v.x86().quad(Type.BOOL.getOffset());
         v.x86().quad(0);
 
         v.x86().dlabel(TRUE_PRINT_FORMAT_LABEL);
