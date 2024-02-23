@@ -32,6 +32,12 @@ public class BuiltinFunctions {
     }
 
     @Builtin
+    public static void __strcmp__(TVisitor v) {
+        v.stackAligned(() -> v.x86().call("strcmp"));
+        v.x86().ret();
+    }
+
+    @Builtin
     public static void main(TVisitor v) {
 
         v.malloc(8 * Compile.TYPES.size()); // Allocate memory for TDA

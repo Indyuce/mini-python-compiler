@@ -114,13 +114,13 @@ public class int64 extends Type {
 
     @Override
     public void __eq__(TVisitor v) {
-        // Check type (int/bool)
+        // Check type of arg (int/bool)
         v.x86().movq("0(%rsi)", "%r10");
         v.x86().cmpq(Type.INT.getOffset(), "%r10");
         v.x86().je(__EQ__POS__);
         v.x86().cmpq(Type.BOOL.getOffset(), "%r10");
         v.x86().je(__EQ__POS__);
-        v.x86().movq("$" + bool.FALSE_LABEL, "%rdi");
+        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
         v.x86().ret();
 
         // Check value
@@ -135,13 +135,13 @@ public class int64 extends Type {
 
     @Override
     public void __neq__(TVisitor v) {
-        // Check type (int/bool)
+        // Check type of arg (int/bool)
         v.x86().movq("0(%rsi)", "%r10");
         v.x86().cmpq(Type.INT.getOffset(), "%r10");
         v.x86().je(__NEQ__POS__);
         v.x86().cmpq(Type.BOOL.getOffset(), "%r10");
         v.x86().je(__NEQ__POS__);
-        v.x86().movq("$" + bool.TRUE_LABEL, "%rdi");
+        v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
         v.x86().ret();
 
         // Check value
