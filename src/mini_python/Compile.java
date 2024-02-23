@@ -375,8 +375,8 @@ class TVisitorImpl implements TVisitor {
             x86.jmp(loop);
 
             x86.label(end); // End of loop
+            x86.movq("%r14", "%rax");
         }, "%r12", "%r13", "%r14");
-        x86.movq("%r14", "%rax");
     }
 
     @Override
