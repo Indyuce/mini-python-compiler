@@ -94,7 +94,6 @@ class TVisitorImpl implements TVisitor {
     }
 
     @NotNull
-    @Override
     public String newTextLabel() {
         return "t_" + textLabelCounter++;
     }

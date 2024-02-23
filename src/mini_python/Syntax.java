@@ -785,10 +785,6 @@ class TFile {
 
 interface TVisitor {
 
-    @NotNull
-    @Difference
-    String newTextLabel();
-
     @Difference
     X86_64 x86();
 
