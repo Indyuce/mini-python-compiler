@@ -6,25 +6,25 @@ public class BuiltinFunctions {
 
     @Builtin
     public static void __malloc__(TVisitor v) {
-        v.stackAligned(x86 -> v.x86().call("malloc"));
+        v.stackAligned(() -> v.x86().call("malloc"));
         v.x86().ret();
     }
 
     @Builtin
     public static void __printf__(TVisitor v) {
-        v.stackAligned(x86 -> v.x86().call("printf"));
+        v.stackAligned(() -> v.x86().call("printf"));
         v.x86().ret();
     }
 
     @Builtin
     public static void __strcpy__(TVisitor v) {
-        v.stackAligned(x86 -> v.x86().call("strcpy"));
+        v.stackAligned(() -> v.x86().call("strcpy"));
         v.x86().ret();
     }
 
     @Builtin
     public static void __strcat__(TVisitor v) {
-        v.stackAligned(x86 -> v.x86().call("strcat"));
+        v.stackAligned(() -> v.x86().call("strcat"));
         v.x86().ret();
     }
 

@@ -814,10 +814,10 @@ interface TVisitor {
      * @param regs Registers to save
      */
     @Difference
-    void saveRegisters(Consumer<X86_64> code, String... regs);
+    void saveRegisters(Runnable code, String... regs);
 
     @Difference
-    void stackAligned(Consumer<X86_64> code);
+    void stackAligned(Runnable code);
 
     @Difference
     void visit(TDef tdef);

@@ -110,7 +110,7 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void newValue(Type type, int bytes) {
-        saveRegisters(x86 -> malloc(bytes), "%rsi", "%rdi");
+        saveRegisters(() -> malloc(bytes), "%rsi", "%rdi");
         x86.movq(type.getOffset(), "0(%rax)");
     }
 
@@ -124,13 +124,13 @@ class TVisitorImpl implements TVisitor {
     }
 
     @Override
-    public void saveRegisters(Consumer<X86_64> code, String... regs) {
+    public void saveRegisters(Runnable code, String... regs) {
 
         // Push
         for (int i = 0; i < regs.length; i++)
             x86.pushq(regs[i]);
 
-        code.accept(x86);
+        code.run();
 
         // Pop
         for (int i = 0; i < regs.length; i++)
@@ -163,11 +163,11 @@ class TVisitorImpl implements TVisitor {
     }
 
     @Override
-    public void stackAligned(Consumer<X86_64> code) {
-        saveRegisters(x86 -> {
+    public void stackAligned(Runnable code) {
+        saveRegisters(() -> {
             x86.movq("%rsp", "%rbp");
             x86.andq("$-16", "%rsp");
-            code.accept(x86);
+            code.run();
             x86.movq("%rbp", "%rsp");
         }, "%rbp");
     }
@@ -250,7 +250,7 @@ class TVisitorImpl implements TVisitor {
                 // TODO lazy and
             }
             default -> {
-                saveRegisters(x86 -> {
+                saveRegisters(() -> {
                     e.e2.accept(this);
                     x86.movq("%rdi", "%rsi");
                 }, "%rdi");

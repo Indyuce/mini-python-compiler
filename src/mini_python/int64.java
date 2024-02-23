@@ -38,7 +38,7 @@ public class int64 extends Type {
      *                  be placed inside %rdi
      */
     private void binop(TVisitor v, Runnable operation) {
-        v.saveRegisters(x86 -> {
+        v.saveRegisters(() -> {
             v.x86().movq("%rsi", "%rdi");
             v.objectFunctionCall(Type.getOffset("__int__")); // %rdi = &int([e2])
             v.x86().movq("8(%rdi)", "%rsi"); // %rsi = int([e2])
@@ -53,8 +53,30 @@ public class int64 extends Type {
         v.x86().ret();
     }
 
+    /**
+     * %rdi = 1st arg, object caller
+     * %rsi = 2nd arg
+     *
+     * @param v         Visitor I guess
+     * @param operation Code corresponding to arithmetic operation where
+     *                  [e1] is in %rdi and [e2] is in %rsi. Boolean result
+     *                  of comparison/equality check must be placed in %cl
+     */
     private void comp(TVisitor v, Runnable operation) {
-        // TODO
+        v.saveRegisters(() -> {
+            v.x86().movq("%rsi", "%rdi");
+            v.objectFunctionCall(Type.getOffset("__int__")); // %rdi = &int([e2])
+            v.x86().movq("8(%rdi)", "%rsi"); // %rsi = int([e2])
+        }, "%rdi");
+        v.x86().movq("8(%rdi)", "%rdi"); // %rdi = [e1]
+
+        operation.run();
+        v.x86().movzbq("%cl", "%r10");
+
+        v.saveRegisters(() -> v.newValue(Type.BOOL, 2), "%r10");
+        v.x86().movq("%r10", "8(%rax)"); // put value at %rax+8
+        v.x86().movq("%rax", "%rdi"); // put address in %rdi
+        v.x86().ret();
     }
 
     @Override
@@ -92,32 +114,48 @@ public class int64 extends Type {
 
     @Override
     public void __eq__(TVisitor v) {
+        //  v.x86().cmpq("%rdi", "%rsi");
+        //   v.x86().sete("%cl");
         // TODO
     }
 
     @Override
     public void __neq__(TVisitor v) {
+        //  v.x86().cmpq("%rdi", "%rsi");
+        //   v.x86().setne("%cl");
         // TODO
     }
 
     @Override
     public void __lt__(TVisitor v) {
-        // TODO
+        comp(v, () -> {
+            v.x86().cmpq("%rsi", "%rdi");
+            v.x86().setl("%cl");
+        });
     }
 
     @Override
     public void __le__(TVisitor v) {
-        // TODO
+        comp(v, () -> {
+            v.x86().cmpq("%rsi", "%rdi");
+            v.x86().setle("%cl");
+        });
     }
 
     @Override
     public void __gt__(TVisitor v) {
-        // TODO
+        comp(v, () -> {
+            v.x86().cmpq("%rsi", "%rdi");
+            v.x86().setg("%cl");
+        });
     }
 
     @Override
     public void __ge__(TVisitor v) {
-        // TODO
+        comp(v, () -> {
+            v.x86().cmpq("%rsi", "%rdi");
+            v.x86().setge("%cl");
+        });
     }
 
     @Override

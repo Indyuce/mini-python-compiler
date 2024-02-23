@@ -1,3 +1,24 @@
+print(1<2)
+print(1<=2)
+print(1>2)
+print(1>=2)
+
+print("")
+
+print(5<3)
+print(5<=3)
+print(5>3)
+print(5>=3)
+
+print("")
+
+print(5<5)
+print(5<=5)
+print(5>5)
+print(5>=5)
+
+print("")
+
 print(7+3)
 print(True)
 print("chacal" + " guillaume" + " ahahahhah xd !!!!")

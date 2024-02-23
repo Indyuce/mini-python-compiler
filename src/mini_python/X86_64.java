@@ -1,5 +1,7 @@
 package mini_python;
 
+import mini_python.annotation.Difference;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -124,6 +126,15 @@ public class X86_64 {
 
     X86_64 andq(String op1, String op2) {
         return emit("andq " + op1 + ", " + op2);
+    }
+
+    @Difference
+    X86_64 andb(String op1, String op2) {
+        return emit("andb " + op1 + ", " + op2);
+    }
+
+    X86_64 orb(String op1, String op2) {
+        return emit("orb " + op1 + ", " + op2);
     }
 
     X86_64 orq(String op1, String op2) {
