@@ -6,10 +6,8 @@ import mini_python.annotation.NotNull;
 import mini_python.exception.CompileError;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * There are no object-specific built-in functions or methods.
@@ -22,7 +20,6 @@ import java.util.Map;
  */
 public abstract class Type {
     public static final Type NONE = new none(), BOOL = new bool(), INT = new int64(), STRING = new string(), LIST = new list();
-
 
     public abstract int getOffset();
 
@@ -161,10 +158,11 @@ public abstract class Type {
 
         // Method delegation
         try {
-            final Method submethod = type.getClass().getDeclaredMethod(function.getName());
+            final Method submethod = type.getClass().getDeclaredMethod(function.getName(), TVisitor.class);
             final Delegated delegate = submethod.getAnnotation(Delegated.class);
-            if (delegate != null) delegate.id();
+            if (delegate != null) return delegate.id();
         } catch (Exception exception) {
+            System.out.println("" + Arrays.asList(type.getClass().getDeclaredMethods()).stream().map(m -> m.getName()).collect(Collectors.toList()));
             throw new CompileError("could not find method " + function.getName() + " from type " + type.name() + " for method delegation: " + exception.getMessage());
         }
 

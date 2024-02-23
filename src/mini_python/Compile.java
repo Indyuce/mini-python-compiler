@@ -2,6 +2,7 @@ package mini_python;
 
 import mini_python.annotation.Builtin;
 import mini_python.annotation.NotNull;
+import mini_python.annotation.Saves;
 import mini_python.exception.CompileError;
 import mini_python.exception.NotImplementedError;
 
@@ -143,6 +144,7 @@ class TVisitorImpl implements TVisitor {
 
     @NotNull
     @Override
+    @Saves(reg = "%rdi")
     public String ofType(String reg, Type... acceptedTypes) {
         final String label = newTextLabel();
 
@@ -283,7 +285,8 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TElen e) {
-        // TODO
+        e.e.accept(this); // %rdi = &[e]
+        x86.call("__len__"); // %rdi = len([e])
     }
 
     @Override

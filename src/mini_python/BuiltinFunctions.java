@@ -30,13 +30,19 @@ public class BuiltinFunctions {
 
     @Builtin
     public static void __len__(TVisitor v) {
-        // TODO
+        v.ofType("%rdi", Type.STRING, Type.LIST);
+        v.x86().movq("%rdi", "%rsi");
+
+        v.newValue(Type.INT, 2);
+        v.x86().movq("8(%rsi)", "%r10"); // get length of string/list
+        v.x86().movq("%r10", "8(%rdi)"); // write length into new int
+        v.x86().ret();
     }
 
     @Builtin
     public static void __err__(TVisitor v) {
-        v.x86().movq(60, "%rax"); // Syscall number
-        v.x86().movq(1, "%rdi"); // Error code in %rdi
+        v.x86().movq(60, "%rax"); // syscall number
+        v.x86().movq(1, "%rdi"); // error code in %rdi
         v.x86().emit("syscall");
     }
 }
