@@ -5,6 +5,10 @@ import mini_python.exception.FunctionDelegatedError;
 
 public class string extends Type {
 
+    public static final String
+            PRINT_FORMAT_LABEL = "__string__print__fmt__",
+            PRINT_FORMAT_VALUE = "%s\n";
+
     @Override
     public int getOffset() {
         return 3;
@@ -17,7 +21,8 @@ public class string extends Type {
 
     @Override
     public void staticConstants(TVisitor v) {
-
+        v.x86().dlabel(PRINT_FORMAT_LABEL);
+        v.x86().string(PRINT_FORMAT_VALUE);
     }
 
     @Override
@@ -110,8 +115,10 @@ public class string extends Type {
     @Override
     public void __print__(TVisitor v) {
         v.x86().addq("$16", "%rdi");
+        v.x86().movq("%rdi", "%rsi"); // 1st arg, string, in %rsi
+        v.x86().movq("$" + PRINT_FORMAT_LABEL, "%rdi"); // format in %rdi
         v.x86().xorq("%rax", "%rax");
-        v.x86().call("printf");
+        v.x86().call("__printf__");
         v.x86().ret();
     }
 }

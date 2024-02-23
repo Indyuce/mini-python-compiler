@@ -112,7 +112,6 @@ public abstract class Type {
         for (Method method : Type.class.getDeclaredMethods())
             if (method.isAnnotationPresent(Builtin.class)) list.add(method);
 
-        System.out.println("Number of builtin methods inherited from object: " + list.size());
         return list;
     }
 

@@ -817,6 +817,9 @@ interface TVisitor {
     void saveRegisters(Consumer<X86_64> code, String... regs);
 
     @Difference
+    void stackAligned(Consumer<X86_64> code);
+
+    @Difference
     void visit(TDef tdef);
 
     void visit(Cnone c);

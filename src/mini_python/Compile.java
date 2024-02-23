@@ -163,6 +163,16 @@ class TVisitorImpl implements TVisitor {
     }
 
     @Override
+    public void stackAligned(Consumer<X86_64> code) {
+        saveRegisters(x86 -> {
+            x86.movq("%rsp", "%rbp");
+            x86.andq("$-16", "%rsp");
+            code.accept(x86);
+            x86.movq("%rbp", "%rsp");
+        }, "%rbp");
+    }
+
+    @Override
     public void visit(TDef tdef) {
 
         // Add def label (unique because of type)

@@ -6,12 +6,13 @@ public class BuiltinFunctions {
 
     @Builtin
     public static void __malloc__(TVisitor v) {
-        v.x86().pushq("%rbp");
-        v.x86().movq("%rsp", "%rbp");
-        v.x86().andq("$-16", "%rsp");
-        v.x86().call("malloc");
-        v.x86().movq("%rbp", "%rsp");
-        v.x86().popq("%rbp");
+        v.stackAligned(x86 -> v.x86().call("malloc"));
+        v.x86().ret();
+    }
+
+    @Builtin
+    public static void __printf__(TVisitor v) {
+        v.stackAligned(x86 -> v.x86().call("printf"));
         v.x86().ret();
     }
 

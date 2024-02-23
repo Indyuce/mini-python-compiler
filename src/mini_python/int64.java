@@ -10,7 +10,7 @@ public class int64 extends Type {
 
     public static final String
             PRINT_FORMAT_LABEL = "__int__print__fmt__",
-            PRINT_FORMAT_VALUE = "%d";
+            PRINT_FORMAT_VALUE = "%d\n";
 
     @Override
     public int getOffset() {
@@ -86,7 +86,7 @@ public class int64 extends Type {
         binop(v, () -> {
             v.x86().movq("%rdi", "%rax");
             v.x86().idivq("%rsi");
-            v.x86().movq("%rdx", "%rdi"); // remainder is placed in %rax
+            v.x86().movq("%rdx", "%rdi"); // remainder is placed in %rdx
         });
     }
 
@@ -171,7 +171,7 @@ public class int64 extends Type {
         v.x86().movq("8(%rdi)", "%rsi"); // extract byte value in %rsi
         v.x86().movq("$" + PRINT_FORMAT_LABEL, "%rdi");
         v.x86().xorq("%rax", "%rax");
-        v.x86().call("printf");
+        v.x86().call("__printf__");
         v.x86().ret();
     }
 }

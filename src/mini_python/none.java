@@ -4,8 +4,8 @@ public class none extends Type {
 
     public static final String
             NONE_LABEL = "__none__None__",
-            NONE_STR_LABEL = "__none__None__str__",
-            NONE_STR_VALUE = "None";
+            NONE_STR_LABEL = "__none__print__fmt__",
+            NONE_STR_VALUE = "None\n";
 
     @Override
     public int getOffset() {
@@ -129,7 +129,7 @@ public class none extends Type {
         // Hardcoded print None
         v.x86().movq("$" + NONE_STR_LABEL, "%rdi");
         v.x86().movq("$0", "%rax");
-        v.x86().call("printf");
+        v.x86().call("__printf__");
         v.x86().ret();
     }
 }
