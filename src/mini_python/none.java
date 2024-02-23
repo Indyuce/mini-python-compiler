@@ -5,7 +5,7 @@ public class none extends Type {
     public static final String
             NONE_LABEL = "__none__None__",
             NONE_STR_LABEL = "__none__print__fmt__",
-            NONE_STR_VALUE = "None\n";
+            NONE_STR_VALUE = "None";
 
     @Override
     public int getOffset() {

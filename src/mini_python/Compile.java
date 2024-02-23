@@ -94,7 +94,8 @@ class TVisitorImpl implements TVisitor {
     }
 
     @NotNull
-    private String newTextLabel() {
+    @Override
+    public String newTextLabel() {
         return "t_" + textLabelCounter++;
     }
 
@@ -316,7 +317,19 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TEget e) {
-        throw new NotImplementedError();
+        e.e1.accept(this);
+        ofType("%rax", Type.LIST);
+        x86.movq("%rax", "%rdi");
+
+        saveRegisters(() -> {
+            e.e2.accept(this);
+            ofType("%rax", Type.INT);
+            x86.movq("8(%rax)", "%rsi");
+        }, "%rax");
+
+        // %rsi = &[int]
+        // %rax = &[list]
+        x86.leaq("16(%rax, %rsi, 8)", "%rax");
     }
 
     @Override
@@ -332,13 +345,38 @@ class TVisitorImpl implements TVisitor {
                 element.accept(this); // result in %rax
                 x86.movq("%rax", 8 * i++ + "(%r12)");
             }
+            x86.movq("%r12", "%rax");
         }, "%r12");
-        x86.movq("%r12", "%rax");
     }
 
     @Override
     public void visit(TErange e) {
-        throw new NotImplementedError();
+        saveRegisters(() -> {
+            e.e.accept(this);
+            ofType("%rax", Type.INT);
+            x86.movq("8(%rax)", "%r13"); // %r13 = max counter
+            x86.xorq("%r12", "%r12"); // %r12 = current counter
+
+            x86.leaq("16(, %r13, 8)", "%rdi"); // Allocate memory for list
+            x86.call("__malloc__");
+            x86.movq("%rax", "%r14"); // %r14 = &[list]
+            x86.movq(Type.LIST.getOffset(), "0(%r14)"); // write type identifier
+            x86.movq("%r13", "8(%r14)"); // write length
+
+            final String loop = newTextLabel(), end = newTextLabel();
+            x86.label(loop); // Main loop label
+            x86.cmpq("%r12", "%r13");
+            x86.je(end);
+            newValue(Type.INT, 16); // new value to be written to list
+            x86.movq("%r12", "8(%rax)"); // write value
+            x86.leaq("16(%r14, %r12, 8)", "%r10"); // target address of new value, i LOVE leaq
+            x86.movq("%rax", "(%r10)");
+            x86.incq("%r12");
+            x86.jmp(loop);
+
+            x86.label(end); // End of loop
+        }, "%r12", "%r13", "%r14");
+        x86.movq("%r14", "%rax");
     }
 
     @Override
@@ -372,6 +410,8 @@ class TVisitorImpl implements TVisitor {
         s.e.accept(this); // %rax = &[e]
         x86.movq("%rax", "%rdi");
         selfCall(Type.getOffset("__print__"));
+        x86.movq("$" + string.LINE_BREAK_LABEL, "%rdi");
+        x86.call("__printf__");
     }
 
     @Override

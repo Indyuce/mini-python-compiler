@@ -10,7 +10,7 @@ public class int64 extends Type {
 
     public static final String
             PRINT_FORMAT_LABEL = "__int__print__fmt__",
-            PRINT_FORMAT_VALUE = "%d\n";
+            PRINT_FORMAT_VALUE = "%d";
 
     @Override
     public int getOffset() {

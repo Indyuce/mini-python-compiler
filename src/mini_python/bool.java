@@ -9,9 +9,9 @@ public class bool extends Type {
             TRUE_LABEL = "__bool__True",
             FALSE_LABEL = "__bool__False",
             TRUE_PRINT_FORMAT_LABEL = "__bool__True__print__fmt__",
-            TRUE_PRINT_FORMAT_VALUE = "True\n",
+            TRUE_PRINT_FORMAT_VALUE = "True",
             FALSE_PRINT_FORMAT_LABEL = "__bool__False__print__fmt__",
-            FALSE_PRINT_FORMAT_VALUE = "False\n";
+            FALSE_PRINT_FORMAT_VALUE = "False";
 
     @Override
     public int getOffset() {
@@ -129,12 +129,10 @@ public class bool extends Type {
         // %rdi = &[e]
         v.x86().cmpq(0, "8(%rdi)");
         v.x86().je("__bool__print__neg__");
-        v.x86().movq("$" + TRUE_PRINT_FORMAT_LABEL, "%rdi");
+        v.x86().movq("$" + TRUE_PRINT_FORMAT_LABEL, "%rdi"); // print True
         v.x86().jmp("__bool__print__nxt__");
-
-        v.x86().label("__bool__print__neg__");
+        v.x86().label("__bool__print__neg__"); // print False
         v.x86().movq("$" + FALSE_PRINT_FORMAT_LABEL, "%rdi");
-
         v.x86().label("__bool__print__nxt__");
         v.x86().call("__printf__");
         v.x86().ret();

@@ -5,6 +5,14 @@ import mini_python.exception.FunctionDelegatedError;
 
 public class list extends Type {
 
+    public static final String
+            BRACKET_OPEN_LABEL = "__list__print__bko__",
+            BRACKET_OPEN_VALUE = "[",
+            SEP_LABEL = "__list__print__sep__",
+            SEP_VALUE = ", ",
+            BRACKET_CLOSE_LABEL = "__list__print__bkc__",
+            BRACKET_CLOSE_VALUE = "]";
+
     @Override
     public int getOffset() {
         return 4;
@@ -15,9 +23,15 @@ public class list extends Type {
         return "list";
     }
 
+
     @Override
     public void staticConstants(TVisitor v) {
-
+        v.x86().dlabel(BRACKET_OPEN_LABEL);
+        v.x86().string(BRACKET_OPEN_VALUE);
+        v.x86().dlabel(SEP_LABEL);
+        v.x86().string(SEP_VALUE);
+        v.x86().dlabel(BRACKET_CLOSE_LABEL);
+        v.x86().string(BRACKET_CLOSE_VALUE);
     }
 
     @Override
@@ -99,6 +113,33 @@ public class list extends Type {
 
     @Override
     public void __print__(TVisitor v) {
-        // TODO
+        v.saveRegisters(() -> {
+            v.x86().xorq("%r12", "%r12"); // %r12 = counter
+            v.x86().movq("8(%rdi)", "%r13"); // %r13 = list length
+            v.x86().movq("%rdi", "%r14"); // %r14 = &list
+
+            v.x86().movq("$" + BRACKET_OPEN_LABEL, "%rdi"); // bracket open
+            v.x86().call("__printf__");
+
+            final String loop = v.newTextLabel(), skipSep = v.newTextLabel(), end = v.newTextLabel();
+            v.x86().label(loop); // Main loop label
+            v.x86().cmpq("%r12", "%r13");
+            v.x86().je(end); // Quit loop
+            v.x86().cmpq(0, "%r12");
+            v.x86().je(skipSep);
+            v.x86().movq("$"+ SEP_LABEL, "%rdi"); // display separator
+            v.x86().call("__printf__");
+            v.x86().label(skipSep);
+            v.x86().leaq("16(%r14, %r12, 8)", "%rdi"); // compute object address
+            v.x86().movq("(%rdi)", "%rdi"); // access object
+            v.selfCall(Type.getOffset("__print__")); // print object
+            v.x86().incq("%r12");
+            v.x86().jmp(loop);
+
+            v.x86().label(end); // End of loop
+            v.x86().movq("$" + BRACKET_CLOSE_LABEL, "%rdi"); // bracket close
+            v.x86().call("__printf__");
+        }, "%r12", "%r13", "%r14");
+        v.x86().ret();
     }
 }
