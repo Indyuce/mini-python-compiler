@@ -1,1 +1,1 @@
-print(len("francesco bogoni"))
+print(not False)

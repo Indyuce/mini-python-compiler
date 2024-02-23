@@ -157,9 +157,9 @@ public class int64 extends Type {
     public void __bool__(TVisitor v) {
         v.newValue(Type.BOOL, 2);
 
-        v.x86().movq("8(%rdi)", "%r10");
-        v.x86().notq("%r10");
-        v.x86().notq("%r10");
+        v.x86().cmpq(0, "8(%rdi)");
+        v.x86().setne("%cl");
+        v.x86().movzbq("%cl", "%r10");
         v.x86().movq("%r10", "8(%rax)");
 
         v.x86().movq("%rax", "%rdi");
