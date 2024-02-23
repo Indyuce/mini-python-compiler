@@ -112,18 +112,46 @@ public class int64 extends Type {
         });
     }
 
+    private static final String __EQ__POS__ = "__int__eq__pos__";
+
     @Override
     public void __eq__(TVisitor v) {
-        //  v.x86().cmpq("%rdi", "%rsi");
-        //   v.x86().sete("%cl");
-        // TODO
+        // Check type (int/bool)
+        v.x86().movq("0(%rsi)", "%r10");
+        v.x86().cmpq(Type.INT.getOffset(), "%r10");
+        v.x86().je(__EQ__POS__);
+        v.x86().cmpq(Type.BOOL.getOffset(), "%r10");
+        v.x86().je(__EQ__POS__);
+        v.x86().movq(bool.FALSE_LABEL, "%rdi");
+        v.x86().ret();
+
+        // Check value
+        v.x86().label(__EQ__POS__);
+        comp(v, () -> {
+            v.x86().cmpq("%rsi", "%rdi");
+            v.x86().sete("%cl");
+        });
     }
+
+    private static final String __NEQ__POS__ = "__int__neq__pos__";
 
     @Override
     public void __neq__(TVisitor v) {
-        //  v.x86().cmpq("%rdi", "%rsi");
-        //   v.x86().setne("%cl");
-        // TODO
+        // Check type (int/bool)
+        v.x86().movq("0(%rsi)", "%r10");
+        v.x86().cmpq(Type.INT.getOffset(), "%r10");
+        v.x86().je(__NEQ__POS__);
+        v.x86().cmpq(Type.BOOL.getOffset(), "%r10");
+        v.x86().je(__NEQ__POS__);
+        v.x86().movq(bool.TRUE_LABEL, "%rdi");
+        v.x86().ret();
+
+        // Check value
+        v.x86().label(__NEQ__POS__);
+        comp(v, () -> {
+            v.x86().cmpq("%rsi", "%rdi");
+            v.x86().setne("%cl");
+        });
     }
 
     @Override
