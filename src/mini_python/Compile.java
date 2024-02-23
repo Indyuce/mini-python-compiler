@@ -318,18 +318,16 @@ class TVisitorImpl implements TVisitor {
     @Override
     public void visit(TEget e) {
         e.e1.accept(this);
-        ofType("%rax", Type.LIST);
-        x86.movq("%rax", "%rdi");
+        ofType("%rax", Type.LIST); // %rax = &[list]
 
         saveRegisters(() -> {
             e.e2.accept(this);
             ofType("%rax", Type.INT);
-            x86.movq("8(%rax)", "%rsi");
+            x86.movq("8(%rax)", "%rsi"); // %rsi = int value
         }, "%rax");
 
-        // %rsi = &[int]
-        // %rax = &[list]
         x86.leaq("16(%rax, %rsi, 8)", "%rax");
+        x86.movq("(%rax)", "%rax");
     }
 
     @Override
