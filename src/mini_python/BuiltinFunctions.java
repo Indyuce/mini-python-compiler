@@ -31,10 +31,9 @@ public class BuiltinFunctions {
     @Builtin
     public static void __len__(TVisitor v) {
         v.ofType("%rdi", Type.STRING, Type.LIST);
-        v.x86().movq("%rdi", "%rsi");
 
-        v.newValue(Type.INT, 2); // %rdi = &[new int]
-        v.x86().movq("8(%rsi)", "%r10"); // get length of string/list
+        v.newValue(Type.INT, 2); // %rax = &[new int]
+        v.x86().movq("8(%rdi)", "%r10"); // get length of string/list
         v.x86().movq("%r10", "8(%rax)"); // write length into new int
 
         v.x86().movq("%rax", "%rdi");
