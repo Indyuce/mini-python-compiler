@@ -6,8 +6,10 @@ import mini_python.annotation.NotNull;
 import mini_python.exception.CompileError;
 
 import java.lang.reflect.Method;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * There are no object-specific built-in functions or methods.
@@ -155,7 +157,6 @@ public abstract class Type {
             final Delegated delegate = submethod.getAnnotation(Delegated.class);
             if (delegate != null) return delegate.id();
         } catch (Exception exception) {
-            System.out.println("" + Arrays.asList(type.getClass().getDeclaredMethods()).stream().map(m -> m.getName()).collect(Collectors.toList()));
             throw new CompileError("could not find method " + function.getName() + " from type " + type.name() + " for method delegation: " + exception.getMessage());
         }
 

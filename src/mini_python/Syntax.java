@@ -2,7 +2,6 @@ package mini_python;
 
 import mini_python.annotation.Difference;
 import mini_python.annotation.NotNull;
-import mini_python.annotation.Saves;
 
 import java.util.LinkedList;
 import java.util.Objects;
@@ -795,10 +794,8 @@ interface TVisitor {
     /**
      * - Allocates memory in heap
      * - Sets type identifier of new value
-     * <p>
-     * Address of new value is in %rax, not %rdi
+     * - Puts address of new value in %rax
      */
-    @Saves(reg = {"%rdi", "%rsi"})
     @Difference
     void newValue(Type type, int bytes);
 
@@ -806,7 +803,7 @@ interface TVisitor {
     void err();
 
     @Difference
-    void objectFunctionCall(int offset);
+    void selfCall(int offset);
 
 
     /**

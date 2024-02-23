@@ -12,7 +12,10 @@ public class BuiltinFunctions {
 
     @Builtin
     public static void __printf__(TVisitor v) {
-        v.stackAligned(() -> v.x86().call("printf"));
+        v.stackAligned(() -> {
+            v.x86().xorq("%rax", "%rax");
+            v.x86().call("printf");
+        });
         v.x86().ret();
     }
 
@@ -45,11 +48,10 @@ public class BuiltinFunctions {
     public static void __len__(TVisitor v) {
         v.ofType("%rdi", Type.STRING, Type.LIST);
 
-        v.newValue(Type.INT, 2); // %rax = &[new int]
+        v.saveRegisters(() -> v.newValue(Type.INT, 2), "%rdi"); // %rax = &[new int]
         v.x86().movq("8(%rdi)", "%r10"); // get length of string/list
         v.x86().movq("%r10", "8(%rax)"); // write length into new int
 
-        v.x86().movq("%rax", "%rdi");
         v.x86().ret();
     }
 

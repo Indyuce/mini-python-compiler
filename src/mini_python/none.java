@@ -89,28 +89,20 @@ public class none extends Type {
 
     @Override
     public void __not__(TVisitor v) {
-        // Hardcoded write True
-        v.newValue(Type.INT, 2);
-        v.x86().movq(1, "8(%rax)");
-        v.x86().movq("%rax", "%rdi");
+        v.x86().movq("$" + bool.TRUE_LABEL, "%rax"); // Hardcoded write True
         v.x86().ret();
     }
 
     @Override
     public void __int__(TVisitor v) {
-        // Hardcoded write 0
         v.newValue(Type.INT, 2);
-        v.x86().movq(0, "8(%rax)");
-        v.x86().movq("%rax", "%rdi");
+        v.x86().movq(0, "8(%rax)");  // Hardcoded write 0
         v.x86().ret();
     }
 
     @Override
     public void __bool__(TVisitor v) {
-        // Hardcoded write False
-        v.newValue(Type.BOOL, 2);
-        v.x86().movq(0, "8(%rax)");
-        v.x86().movq("%rax", "%rdi");
+        v.x86().movq("$" + bool.FALSE_LABEL, "%rax"); // Hardcoded write False
         v.x86().ret();
     }
 
@@ -118,7 +110,6 @@ public class none extends Type {
     public void __print__(TVisitor v) {
         // Hardcoded print None
         v.x86().movq("$" + NONE_STR_LABEL, "%rdi");
-        v.x86().movq("$0", "%rax");
         v.x86().call("__printf__");
         v.x86().ret();
     }

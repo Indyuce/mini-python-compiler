@@ -40,16 +40,15 @@ public class int64 extends Type {
     private void binop(TVisitor v, Runnable operation) {
         v.saveRegisters(() -> {
             v.x86().movq("%rsi", "%rdi");
-            v.objectFunctionCall(Type.getOffset("__int__")); // %rdi = &int([e2])
-            v.x86().movq("8(%rdi)", "%rsi"); // %rsi = int([e2])
+            v.selfCall(Type.getOffset("__int__")); // %rax = &int([e2])
+            v.x86().movq("8(%rax)", "%rsi"); // %rsi = int([e2])
         }, "%rdi");
         v.x86().movq("8(%rdi)", "%rdi"); // %rdi = [e1]
 
         operation.run();
 
-        v.newValue(Type.INT, 2);
+        v.saveRegisters(() -> v.newValue(Type.INT, 2), "%rdi");
         v.x86().movq("%rdi", "8(%rax)"); // put value at %rax+8
-        v.x86().movq("%rax", "%rdi"); // put address in %rdi
         v.x86().ret();
     }
 
@@ -65,8 +64,8 @@ public class int64 extends Type {
     private void comp(TVisitor v, Runnable operation) {
         v.saveRegisters(() -> {
             v.x86().movq("%rsi", "%rdi");
-            v.objectFunctionCall(Type.getOffset("__int__")); // %rdi = &int([e2])
-            v.x86().movq("8(%rdi)", "%rsi"); // %rsi = int([e2])
+            v.selfCall(Type.getOffset("__int__")); // %rax = &int([e2])
+            v.x86().movq("8(%rax)", "%rsi"); // %rsi = int([e2])
         }, "%rdi");
         v.x86().movq("8(%rdi)", "%rdi"); // %rdi = [e1]
 
@@ -75,7 +74,6 @@ public class int64 extends Type {
 
         v.saveRegisters(() -> v.newValue(Type.BOOL, 2), "%r10");
         v.x86().movq("%r10", "8(%rax)"); // put value at %rax+8
-        v.x86().movq("%rax", "%rdi"); // put address in %rdi
         v.x86().ret();
     }
 
@@ -188,13 +186,12 @@ public class int64 extends Type {
 
     @Override
     public void __neg__(TVisitor v) {
-        v.newValue(Type.INT, 2);
+        v.saveRegisters(() -> v.newValue(Type.INT, 2), "%rdi");
 
         v.x86().movq("8(%rdi)", "%r10");
         v.x86().negq("%r10");
         v.x86().movq("%r10", "8(%rax)");
 
-        v.x86().movq("%rax", "%rdi");
         v.x86().ret();
     }
 
@@ -211,14 +208,13 @@ public class int64 extends Type {
 
     @Override
     public void __bool__(TVisitor v) {
-        v.newValue(Type.BOOL, 2);
+        v.saveRegisters(() -> v.newValue(Type.BOOL, 2), "%rdi");
 
         v.x86().cmpq(0, "8(%rdi)");
         v.x86().setne("%cl");
         v.x86().movzbq("%cl", "%r10");
         v.x86().movq("%r10", "8(%rax)");
 
-        v.x86().movq("%rax", "%rdi");
         v.x86().ret();
     }
 
@@ -226,7 +222,6 @@ public class int64 extends Type {
     public void __print__(TVisitor v) {
         v.x86().movq("8(%rdi)", "%rsi"); // extract byte value in %rsi
         v.x86().movq("$" + PRINT_FORMAT_LABEL, "%rdi");
-        v.x86().xorq("%rax", "%rax");
         v.x86().call("__printf__");
         v.x86().ret();
     }

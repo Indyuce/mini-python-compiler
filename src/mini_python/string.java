@@ -53,7 +53,7 @@ public class string extends Type {
             v.x86().leaq("16(%r14)", "%rdi");
             v.x86().leaq("16(%r13)", "%rsi");
             v.x86().call("__strcat__");
-            v.x86().movq("%r14", "%rdi");
+            v.x86().movq("%r14", "%rax");
         }, "%r12", "%r13", "%r14");
 
         v.x86().ret();
@@ -136,7 +136,6 @@ public class string extends Type {
         v.x86().addq("$16", "%rdi");
         v.x86().movq("%rdi", "%rsi"); // 1st arg, string, in %rsi
         v.x86().movq("$" + PRINT_FORMAT_LABEL, "%rdi"); // format in %rdi
-        v.x86().xorq("%rax", "%rax");
         v.x86().call("__printf__");
         v.x86().ret();
     }

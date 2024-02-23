@@ -108,19 +108,19 @@ public class bool extends Type {
 
     @Override
     public void __not__(TVisitor v) {
-        v.newValue(Type.BOOL, 2);
+        v.saveRegisters(() -> v.newValue(Type.BOOL, 2), "%rdi");
 
         v.x86().cmpq(0, "8(%rdi)");
         v.x86().sete("%cl");
         v.x86().movzbq("%cl", "%r10");
         v.x86().movq("%r10", "8(%rax)");
 
-        v.x86().movq("%rax", "%rdi");
         v.x86().ret();
     }
 
     @Override
     public void __bool__(TVisitor v) {
+        v.x86().movq("%rdi", "%rax");
         v.x86().ret();
     }
 
@@ -136,19 +136,17 @@ public class bool extends Type {
         v.x86().movq("$" + FALSE_PRINT_FORMAT_LABEL, "%rdi");
 
         v.x86().label("__bool__print__nxt__");
-        v.x86().movq("$0", "%rax");
         v.x86().call("__printf__");
         v.x86().ret();
     }
 
     @Override
     public void __int__(TVisitor v) {
-        v.newValue(Type.INT, 2);
+        v.saveRegisters(() -> v.newValue(Type.INT, 2), "%rdi");
 
         v.x86().movq("8(%rdi)", "%r10");
         v.x86().movq("%r10", "8(%rax)"); // Interpret byte-value as int
 
-        v.x86().movq("%rax", "%rdi");
         v.x86().ret();
     }
 }
