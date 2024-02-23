@@ -1,5 +1,8 @@
 package mini_python;
 
+import mini_python.annotation.Delegated;
+import mini_python.exception.FunctionDelegatedError;
+
 public class bool extends Type {
 
     public static final String
@@ -63,33 +66,39 @@ public class bool extends Type {
     }
 
     @Override
+    @Delegated(id = "__int__eq__")
     public void __eq__(TVisitor v) {
-        // TODO
+        throw new FunctionDelegatedError();
     }
 
     @Override
+    @Delegated(id = "__int__neq__")
     public void __neq__(TVisitor v) {
-        // TODO
+        throw new FunctionDelegatedError();
     }
 
     @Override
+    @Delegated(id = "__int__lt__")
     public void __lt__(TVisitor v) {
-        // TODO
+        throw new FunctionDelegatedError();
     }
 
     @Override
+    @Delegated(id = "__int__le__")
     public void __le__(TVisitor v) {
-        // TODO
+        throw new FunctionDelegatedError();
     }
 
     @Override
+    @Delegated(id = "__int__gt__")
     public void __gt__(TVisitor v) {
-        // TODO
+        throw new FunctionDelegatedError();
     }
 
     @Override
+    @Delegated(id = "__int__ge__")
     public void __ge__(TVisitor v) {
-        // TODO
+        throw new FunctionDelegatedError();
     }
 
     @Override
