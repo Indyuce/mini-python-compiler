@@ -805,7 +805,6 @@ interface TVisitor {
     @Difference
     void selfCall(int offset);
 
-
     /**
      * Compiles a fragment of code that checks for given types.
      * If the value in provided register is not one of the

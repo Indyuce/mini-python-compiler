@@ -11,7 +11,7 @@ public class int64 extends Type {
     public static final String
             PRINT_FORMAT_LABEL = "__int__print__fmt__",
             PRINT_FORMAT_VALUE = "%d",
-            ZERO = "__int__zero__";
+            ZERO_LABEL = "__int__zero__";
 
     @Override
     public int getOffset() {
@@ -28,7 +28,7 @@ public class int64 extends Type {
         v.x86().dlabel(PRINT_FORMAT_LABEL);
         v.x86().string(PRINT_FORMAT_VALUE);
 
-        v.x86().dlabel(ZERO);
+        v.x86().dlabel(ZERO_LABEL);
         v.x86().quad(Type.INT.getOffset());
         v.x86().quad(0);
     }

@@ -168,9 +168,18 @@ public class list extends Type {
         v.x86().ret();
     }
 
+    private static final String __NEQ__SKIP__ = "__list__neq__pos";
+
     @Override
     public void __neq__(TVisitor v) {
-        // TODO
+        v.x86().call("__list__eq__");
+        v.x86().cmpq(0, "8(%rax)");
+        v.x86().je(__NEQ__SKIP__);
+        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
+        v.x86().ret();
+        v.x86().label(__NEQ__SKIP__);
+        v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
+        v.x86().ret();
     }
 
     @Override
@@ -222,6 +231,7 @@ public class list extends Type {
 
     @Override
     public void __print__(TVisitor v) {
+        // TODO rewrite using #iter(..)
         v.saveRegisters(() -> {
             v.x86().xorq("%r12", "%r12"); // %r12 = counter
             v.x86().movq("8(%rdi)", "%r13"); // %r13 = list length
