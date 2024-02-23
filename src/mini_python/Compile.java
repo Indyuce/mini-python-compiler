@@ -257,7 +257,8 @@ class TVisitorImpl implements TVisitor {
                 x86.jmp(lblnxt);
 
                 x86.label(lblneg);
-                e.e2.accept(this); // %rdi = &[e2]
+                e.e2.accept(this); // %rax = &[e2]
+                x86.movq("%rax", "%rdi");
                 selfCall(Type.getOffset("__bool__")); // %rax = &bool([e2])
 
                 x86.label(lblnxt);
@@ -272,6 +273,7 @@ class TVisitorImpl implements TVisitor {
 
                 x86.label(lblneg);
                 e.e2.accept(this); // %rax = &[e2]
+                x86.movq("%rax", "%rdi");
                 selfCall(Type.getOffset("__bool__")); // %rax = &bool([e2])
 
                 x86.label(lblnxt);
