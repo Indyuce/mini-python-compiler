@@ -17,6 +17,18 @@ public class BuiltinFunctions {
     }
 
     @Builtin
+    public static void __strcpy__(TVisitor v) {
+        v.stackAligned(x86 -> v.x86().call("strcpy"));
+        v.x86().ret();
+    }
+
+    @Builtin
+    public static void __strcat__(TVisitor v) {
+        v.stackAligned(x86 -> v.x86().call("strcat"));
+        v.x86().ret();
+    }
+
+    @Builtin
     public static void main(TVisitor v) {
 
         v.malloc(8 * Compile.TYPES.size()); // Allocate memory for TDA

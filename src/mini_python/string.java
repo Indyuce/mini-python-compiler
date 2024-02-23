@@ -27,7 +27,36 @@ public class string extends Type {
 
     @Override
     public void __add__(TVisitor v) {
-        // TODO
+
+        v.ofType("%rsi", Type.STRING);
+
+        v.saveRegisters(x86 -> {
+            x86.movq("%rdi", "%r12"); // %r12 = &s1
+            x86.movq("%rsi", "%r13"); // %r13 = &s2
+
+            // allocate string result memory
+            x86.movq("8(%r12)", "%rdi");
+            x86.addq("8(%r13)", "%rdi");
+            x86.movq("%rdi", "%r14"); // %r14 = len(s1 + s2)
+            x86.addq("$17", "%rdi"); // %rdi = 16 + len(s1 + s2) + 1
+            x86.call("__malloc__"); // allocate memory
+            x86.movq("$3", "0(%rax)"); // initialize type identifier
+            x86.movq("%r14", "8(%rax)"); // initialize string length
+            x86.movq("%rax", "%r14"); // %r14 = &res
+
+            // copy s1 to res
+            x86.leaq("16(%r14)", "%rdi");
+            x86.leaq("16(%r12)", "%rsi");
+            x86.call("__strcpy__");
+
+            // copy s2 to res
+            x86.leaq("16(%r14)", "%rdi");
+            x86.leaq("16(%r13)", "%rsi");
+            x86.call("__strcat__");
+            x86.movq("%r14", "%rdi");
+        }, "%r12", "%r13", "%r14");
+
+        v.x86().ret();
     }
 
     @Override

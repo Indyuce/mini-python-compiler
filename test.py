@@ -1,6 +1,6 @@
 print(7+3)
 print(True)
-print("chacal")
+print("chacal" + " guillaume" + " ahahahhah xd !!!!")
 print(7-3)
 print(True)
 print(7*3)
