@@ -33,9 +33,11 @@ public class BuiltinFunctions {
         v.ofType("%rdi", Type.STRING, Type.LIST);
         v.x86().movq("%rdi", "%rsi");
 
-        v.newValue(Type.INT, 2);
+        v.newValue(Type.INT, 2); // %rdi = &[new int]
         v.x86().movq("8(%rsi)", "%r10"); // get length of string/list
-        v.x86().movq("%r10", "8(%rdi)"); // write length into new int
+        v.x86().movq("%r10", "8(%rax)"); // write length into new int
+
+        v.x86().movq("%rax", "%rdi");
         v.x86().ret();
     }
 

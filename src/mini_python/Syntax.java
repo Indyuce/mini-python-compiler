@@ -778,10 +778,10 @@ interface TVisitor {
     void malloc(int bytes);
 
     /**
-     * - Allocates bytes
-     * - Set type int
+     * - Allocates memory in heap
+     * - Sets type identifier of new value
      * <p>
-     * Address of new value is in %rax
+     * Address of new value is in %rax, not %rdi
      */
     @Saves(reg = {"%rdi", "%rsi"})
     @Difference
