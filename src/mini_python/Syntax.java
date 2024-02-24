@@ -2,10 +2,9 @@ package mini_python;
 
 import mini_python.annotation.Difference;
 import mini_python.annotation.NotNull;
-import mini_python.annotation.Saves;
 
 import java.util.LinkedList;
-import java.util.function.Consumer;
+import java.util.Objects;
 
 /* Abstract Syntax of Mini-Python */
 
@@ -450,6 +449,21 @@ class Variable {
     static Variable mkVariable(String name) {
         return new Variable(name, id++);
     }
+
+    @Difference
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Variable variable = (Variable) o;
+        return uid == variable.uid;
+    }
+
+    @Difference
+    @Override
+    public int hashCode() {
+        return Objects.hash(uid);
+    }
 }
 
 /* Similarly, all the occurrences of a given function all point
@@ -780,10 +794,8 @@ interface TVisitor {
     /**
      * - Allocates memory in heap
      * - Sets type identifier of new value
-     * <p>
-     * Address of new value is in %rax, not %rdi
+     * - Puts address of new value in %rax
      */
-    @Saves(reg = {"%rdi", "%rsi"})
     @Difference
     void newValue(Type type, int bytes);
 
@@ -791,8 +803,7 @@ interface TVisitor {
     void err();
 
     @Difference
-    void objectFunctionCall(int offset);
-
+    void selfCall(int offset);
 
     /**
      * Compiles a fragment of code that checks for given types.
@@ -814,7 +825,10 @@ interface TVisitor {
      * @param regs Registers to save
      */
     @Difference
-    void saveRegisters(Consumer<X86_64> code, String... regs);
+    void saveRegisters(Runnable code, String... regs);
+
+    @Difference
+    void stackAligned(Runnable code);
 
     @Difference
     void visit(TDef tdef);

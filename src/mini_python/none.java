@@ -4,7 +4,7 @@ public class none extends Type {
 
     public static final String
             NONE_LABEL = "__none__None__",
-            NONE_STR_LABEL = "__none__None__str__",
+            NONE_STR_LABEL = "__none__print__fmt__",
             NONE_STR_VALUE = "None";
 
     @Override
@@ -20,7 +20,7 @@ public class none extends Type {
     @Override
     public void staticConstants(TVisitor v) {
         v.x86().dlabel(NONE_LABEL);
-        v.x86().quad(getOffset());
+        v.x86().quad(Type.NONE.getOffset());
         v.x86().quad(0);
 
         v.x86().dlabel(NONE_STR_LABEL);
@@ -83,44 +83,26 @@ public class none extends Type {
     }
 
     @Override
-    public void __and__(TVisitor v) {
-        v.err();
-    }
-
-    @Override
-    public void __or__(TVisitor v) {
-        v.err();
-    }
-
-    @Override
     public void __neg__(TVisitor v) {
         v.err();
     }
 
     @Override
     public void __not__(TVisitor v) {
-        // Hardcoded write True
-        v.newValue(Type.INT, 2);
-        v.x86().movq(1, "8(%rax)");
-        v.x86().movq("%rax", "%rdi");
+        v.x86().movq("$" + bool.TRUE_LABEL, "%rax"); // Hardcoded write True
         v.x86().ret();
     }
 
     @Override
     public void __int__(TVisitor v) {
-        // Hardcoded write 0
-        v.newValue(Type.INT, 2);
-        v.x86().movq(0, "8(%rax)");
-        v.x86().movq("%rax", "%rdi");
+        v.newValue(Type.INT, 16);
+        v.x86().movq(0, "8(%rax)");  // Hardcoded write 0
         v.x86().ret();
     }
 
     @Override
     public void __bool__(TVisitor v) {
-        // Hardcoded write False
-        v.newValue(Type.BOOL, 2);
-        v.x86().movq(0, "8(%rax)");
-        v.x86().movq("%rax", "%rdi");
+        v.x86().movq("$" + bool.FALSE_LABEL, "%rax"); // Hardcoded write False
         v.x86().ret();
     }
 
@@ -128,8 +110,7 @@ public class none extends Type {
     public void __print__(TVisitor v) {
         // Hardcoded print None
         v.x86().movq("$" + NONE_STR_LABEL, "%rdi");
-        v.x86().movq("$0", "%rax");
-        v.x86().call("printf");
+        v.x86().call("__printf__");
         v.x86().ret();
     }
 }

@@ -2,14 +2,13 @@ package mini_python;
 
 import mini_python.annotation.Builtin;
 import mini_python.annotation.NotNull;
-import mini_python.annotation.Saves;
+import mini_python.annotation.Kills;
 import mini_python.exception.CompileError;
 import mini_python.exception.NotImplementedError;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class Compile {
 
@@ -87,13 +86,15 @@ class TVisitorImpl implements TVisitor {
 
     int dataLabelCounter = 0, textLabelCounter = 0;
 
+    // Set<Variable> assignedVariables = new HashSet<>();
+
     @NotNull
     private String newDataLabel() {
         return "c_" + dataLabelCounter++;
     }
 
     @NotNull
-    private String newTextLabel() {
+    public String newTextLabel() {
         return "t_" + textLabelCounter++;
     }
 
@@ -110,12 +111,12 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void newValue(Type type, int bytes) {
-        saveRegisters(x86 -> malloc(bytes), "%rsi", "%rdi");
+        malloc(bytes);
         x86.movq(type.getOffset(), "0(%rax)");
     }
 
     @Override
-    public void objectFunctionCall(int offset) {
+    public void selfCall(int offset) {
         // %rdi = &[e]
         x86.movq("0(%rdi)", "%r10"); // %r10 = type identifier
         x86.leaq("(" + Compile.TDA_REG + ", %r10, 8)", "%r10"); // %r10 = address of type descriptor
@@ -124,13 +125,13 @@ class TVisitorImpl implements TVisitor {
     }
 
     @Override
-    public void saveRegisters(Consumer<X86_64> code, String... regs) {
+    public void saveRegisters(Runnable code, String... regs) {
 
         // Push
         for (int i = 0; i < regs.length; i++)
             x86.pushq(regs[i]);
 
-        code.accept(x86);
+        code.run();
 
         // Pop
         for (int i = 0; i < regs.length; i++)
@@ -144,7 +145,7 @@ class TVisitorImpl implements TVisitor {
 
     @NotNull
     @Override
-    @Saves(reg = "%rdi")
+    @Kills(reg = {"%r10"})
     public String ofType(String reg, Type... acceptedTypes) {
         final String label = newTextLabel();
 
@@ -163,39 +164,55 @@ class TVisitorImpl implements TVisitor {
     }
 
     @Override
+    public void stackAligned(Runnable code) {
+        saveRegisters(() -> {
+            x86.movq("%rsp", "%rbp");
+            x86.andq("$-16", "%rsp");
+            code.run();
+            x86.movq("%rbp", "%rsp");
+        }, "%rbp");
+    }
+
+    @Override
     public void visit(TDef tdef) {
+        // TODO
+        x86.label(tdef.f.name); // Add def label
 
-        // Add def label (unique because of type)
-        x86.label(tdef.f.name);
+        int i;
+        if (!tdef.f.name.equals(Compile.LABEL_MAIN)) {
+            x86.pushq("%rbp"); // Save base pointer
+            x86.movq("%rsp", "%rbp"); // Set current base pointer
 
-        // Compile function body
-        tdef.body.accept(this);
+            if (!tdef.f.local.isEmpty()) { // Make space for local variables
+                final int bytes = tdef.f.local.size() * 8;
+                x86.addq("$" + bytes, "%rsp");
+            }
 
-        // If main, return code 0
-        if (tdef.f.name.equals(Compile.LABEL_MAIN)) {
+            i = 0;
+            for (Variable var : tdef.f.params) // Set offset of parameters
+                var.ofs = 16 + 8 * i++;
+        }
+
+        i = 0;
+        for (Variable var : tdef.f.local) // Set offset of local/global variables
+            var.ofs = -8 - 8 * i++;
+
+        tdef.body.accept(this); // Compile function body
+
+        if (tdef.f.name.equals(Compile.LABEL_MAIN)) { // If main, return code 0
             x86.xorq("%rax", "%rax");
             x86.ret();
-        }
+        } else visit(new TSreturn(new TEcst(new Cnone()))); // safe return if none
     }
 
     @Override
     public void visit(Cnone c) {
-            /*malloc(2);
-            x86.movq(LABEL_NONE, "0(%rax)");
-            x86.movq("0", "8(%rax)");
-            x86.movq("%rax", "%rdi");*/
-
-        x86.movq("$" + none.NONE_LABEL, "%rdi");
+        x86.movq("$" + none.NONE_LABEL, "%rax");
     }
 
     @Override
     public void visit(Cbool c) {
-            /*malloc(2);
-            x86.data();
-            x86.movq(1, "8(%rax)");
-            x86.movq("%rax", "%rdi");*/
-
-        x86.movq("$" + (c.b ? bool.TRUE_LABEL : bool.FALSE_LABEL), "%rdi");
+        x86.movq("$" + (c.b ? bool.TRUE_LABEL : bool.FALSE_LABEL), "%rax");
     }
 
     @Override
@@ -205,7 +222,7 @@ class TVisitorImpl implements TVisitor {
         x86.quad(Type.STRING.getOffset());
         x86.quad(c.s.length());
         x86.string(c.s);
-        x86.movq("$" + label, "%rdi");
+        x86.movq("$" + label, "%rax");
     }
 
     @Override
@@ -214,7 +231,7 @@ class TVisitorImpl implements TVisitor {
         x86.dlabel(label);
         x86.quad(Type.INT.getOffset());
         x86.quad(c.i);
-        x86.movq("$" + label, "%rdi");
+        x86.movq("$" + label, "%rax");
     }
 
     @Override
@@ -228,86 +245,176 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TEbinop e) {
-
-        // Result in %rdi
-        e.e1.accept(this);
+        e.e1.accept(this); // %rax = &[e1]
+        x86.movq("%rax", "%rdi");
 
         switch (e.op) {
             case Bor -> {
-                // TODO lazy or
+                final String lblneg = newTextLabel(), lblnxt = newTextLabel();
+                selfCall(Type.getOffset("__bool__")); // %rax = &bool([e1])
+                x86.cmpq(0, "8(%rax)");
+                x86.je(lblneg);
+                x86.movq("$" + bool.TRUE_LABEL, "%rax"); // lazy or, early stop
+                x86.jmp(lblnxt);
+
+                x86.label(lblneg);
+                e.e2.accept(this); // %rax = &[e2]
+                x86.movq("%rax", "%rdi");
+                selfCall(Type.getOffset("__bool__")); // %rax = &bool([e2])
+
+                x86.label(lblnxt);
             }
             case Band -> {
-                // TODO lazy and
+                final String lblneg = newTextLabel(), lblnxt = newTextLabel();
+                selfCall(Type.getOffset("__bool__")); // %rax = &bool([e1])
+                x86.cmpq(0, "8(%rax)");
+                x86.jne(lblneg);
+                x86.movq("$" + bool.FALSE_LABEL, "%rax"); // lazy and, early stop
+                x86.jmp(lblnxt);
+
+                x86.label(lblneg);
+                e.e2.accept(this); // %rax = &[e2]
+                x86.movq("%rax", "%rdi");
+                selfCall(Type.getOffset("__bool__")); // %rax = &bool([e2])
+
+                x86.label(lblnxt);
             }
             default -> {
-                saveRegisters(x86 -> {
+                saveRegisters(() -> {
                     e.e2.accept(this);
-                    x86.movq("%rdi", "%rsi");
+                    x86.movq("%rax", "%rsi");
                 }, "%rdi");
+
+                selfCall(Type.getOffset(e.op));
             }
         }
-
-        objectFunctionCall(Type.getOffset(e.op));
     }
 
     @Override
     public void visit(TEunop e) {
-        e.e.accept(this); // %rdi = &[e1]
-        objectFunctionCall(Type.getOffset(e.op));
+        // TODO
+        e.e.accept(this); // %rax = &[e1]
+        x86.movq("%rax", "%rdi");
+        selfCall(Type.getOffset(e.op));
     }
 
     @Override
     public void visit(TEident e) {
-        throw new NotImplementedError("not implemented");
+        // TODO
+        final int offset = e.x.ofs;
+        if (offset == -1) throw new CompileError("could not identify variable " + e.x.name);
+        x86.movq(offset + "(%rbp)", "%rax");
     }
 
     @Override
     public void visit(TEcall e) {
-        // Use name of function for call
-        // TODO parameters
+        // TODO
+        for (int i = 0; i < e.l.size(); i++) {
+            final int idx = e.l.size() - 1 - i;
+            final TExpr arg = e.l.get(idx);
+            arg.accept(this);
+            x86.pushq("%rax"); // push argument on stack
+        }
         x86.call(e.f.name);
     }
 
     @Override
     public void visit(TEget e) {
-        throw new NotImplementedError("not implemented");
+        e.e1.accept(this);
+        ofType("%rax", Type.LIST); // %rax = &[list]
+
+        saveRegisters(() -> {
+            e.e2.accept(this);
+            ofType("%rax", Type.INT);
+            x86.movq("8(%rax)", "%rsi"); // %rsi = int value
+        }, "%rax");
+
+        x86.leaq("16(%rax, %rsi, 8)", "%rax");
+        x86.movq("(%rax)", "%rax");
     }
 
     @Override
     public void visit(TElist e) {
-        throw new NotImplementedError("not implemented");
+        saveRegisters(() -> {
+            final int bytes = 16 + 8 * e.l.size();
+            newValue(Type.LIST, bytes);
+            x86.movq("%rax", "%r12");
+            x86.movq(e.l.size(), "8(%r12)");
+
+            int i = 2;
+            for (TExpr element : e.l) {
+                element.accept(this); // result in %rax
+                x86.movq("%rax", 8 * i++ + "(%r12)");
+            }
+            x86.movq("%r12", "%rax");
+        }, "%r12");
     }
 
     @Override
     public void visit(TErange e) {
-        throw new NotImplementedError("not implemented");
+        saveRegisters(() -> {
+            e.e.accept(this);
+            ofType("%rax", Type.INT);
+            x86.movq("8(%rax)", "%r13"); // %r13 = max counter
+            x86.xorq("%r12", "%r12"); // %r12 = current counter
+
+            x86.leaq("16(, %r13, 8)", "%rdi"); // Allocate memory for list
+            x86.call("__malloc__");
+            x86.movq("%rax", "%r14"); // %r14 = &[list]
+            x86.movq(Type.LIST.getOffset(), "0(%r14)"); // write type identifier
+            x86.movq("%r13", "8(%r14)"); // write length
+
+            final String loop = newTextLabel(), end = newTextLabel();
+            x86.label(loop); // Main loop label
+            x86.cmpq("%r12", "%r13");
+            x86.je(end);
+            newValue(Type.INT, 16); // new value to be written to list
+            x86.movq("%r12", "8(%rax)"); // write value
+            x86.leaq("16(%r14, %r12, 8)", "%r10"); // target address of new value, i LOVE leaq
+            x86.movq("%rax", "(%r10)");
+            x86.incq("%r12");
+            x86.jmp(loop);
+
+            x86.label(end); // End of loop
+            x86.movq("%r14", "%rax");
+        }, "%r12", "%r13", "%r14");
     }
 
     @Override
     public void visit(TElen e) {
-        e.e.accept(this); // %rdi = &[e]
-        x86.call("__len__"); // %rdi = len([e])
+        e.e.accept(this); // %rax = &[e]
+        x86.movq("%rax", "%rdi");
+        x86.call("__len__"); // %rax = len([e])
     }
 
     @Override
     public void visit(TSif s) {
-        throw new NotImplementedError("not implemented");
+        // TODO
+        throw new NotImplementedError();
     }
 
     @Override
     public void visit(TSreturn s) {
-        throw new NotImplementedError("not implemented");
+        s.e.accept(this); // result in %rax
+        x86.movq("%rbp", "%rsp");
+        x86.popq("%rbp");
+        x86.ret();
     }
 
     @Override
     public void visit(TSassign s) {
-        throw new NotImplementedError("not implemented");
+        // TODO
+        s.e.accept(this); // %rax = &[e]
+        x86.movq("%rax", s.x.ofs + "(%rbp)");
     }
 
     @Override
     public void visit(TSprint s) {
-        s.e.accept(this); // %rdi = &[e]
-        objectFunctionCall(Type.getOffset("__print__"));
+        s.e.accept(this); // %rax = &[e]
+        x86.movq("%rax", "%rdi");
+        selfCall(Type.getOffset("__print__"));
+        x86.movq("$" + string.LINE_BREAK_LABEL, "%rdi");
+        x86.call("__printf__");
     }
 
     @Override
@@ -318,7 +425,8 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TSfor s) {
-        throw new NotImplementedError("not implemented");
+        // TODO
+        throw new NotImplementedError();
     }
 
     @Override
@@ -328,6 +436,21 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TSset s) {
-        throw new NotImplementedError("not implemented");
+        // TODO
+        s.e1.accept(this);
+        ofType("%rax", Type.LIST); // %rax = &[list]
+
+        saveRegisters(() -> {
+            s.e2.accept(this);
+            ofType("%rax", Type.INT);
+            x86.movq("8(%rax)", "%rcx"); // %rcx = [int]
+            saveRegisters(() -> {
+                s.e3.accept(this);
+                x86.movq("%rax", "%rdx"); // %rdx = &[e]
+            }, "%rcx");
+        }, "%rax");
+
+        x86.leaq("16(%rax, %rcx, 8)", "%rsi"); // compute address
+        x86.movq("%rdx", "(%rsi)"); // set element
     }
 }

@@ -126,6 +126,10 @@ public class X86_64 {
         return emit("andq " + op1 + ", " + op2);
     }
 
+    X86_64 orb(String op1, String op2) {
+        return emit("orb " + op1 + ", " + op2);
+    }
+
     X86_64 orq(String op1, String op2) {
         return emit("orq " + op1 + ", " + op2);
     }
