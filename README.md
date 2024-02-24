@@ -14,7 +14,7 @@ A compiler for Python subset into assembly language
 
 ### Tester du code assembleur généré
 - Se connecter en SSH à un ordi de la salle info
-- Compiler le code avec `gcc -g <fichier.s> -o fichier`
+- Compiler le code avec `gcc -g -no-pie <fichier.s> -o fichier`
 - Lancer le code avec GDB en utilisant `gdb ./fichier`
 
 ### Compilation of built-in functions (unary operators, binary operators)

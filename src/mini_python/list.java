@@ -227,7 +227,7 @@ public class list extends Type {
             // %r13 = pointer within HLL
             // %r14 = max value of pointer %r12
             // %rbx = if lists are equal
-            iter(v, "%rax", "eq", "%r12", "%r14", () -> {
+            iter(v, "%rax", "eq_"+functionName+"_", "%r12", "%r14", () -> {
                 v.x86().movq("(%r12)", "%rdi"); // 1st arg, caller
                 v.x86().movq("(%r13)", "%rsi"); // 2nd arg
                 v.selfCall(Type.getOffset(compFunction)); // bool in %rax
