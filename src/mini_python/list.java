@@ -1,6 +1,7 @@
 package mini_python;
 
 import mini_python.annotation.Delegated;
+import mini_python.annotation.Nullable;
 import mini_python.exception.FunctionDelegatedError;
 
 public class list extends Type {
@@ -68,7 +69,7 @@ public class list extends Type {
         v.x86().ret();
     }
 
-    private void iter(TVisitor v, String listReg, String label, Runnable code) {
+    private void iter(TVisitor v, @Nullable String listReg, String label, Runnable code) {
         iter(v, listReg, label, "%rcx", "%rdx", code);
     }
 
@@ -82,13 +83,15 @@ public class list extends Type {
      *                %rcx = increasing pointer
      *                %rdx = end pointer
      */
-    private void iter(TVisitor v, String listReg, String label, String counterReg, String destReg, Runnable code) {
+    private void iter(TVisitor v, @Nullable String listReg, String label, String counterReg, String destReg, Runnable code) {
         final String loopLabel = "__list__" + label + "__loop__";
         final String endLabel = "__list__" + label + "__end__";
 
-        v.x86().leaq("16(" + listReg + ")", counterReg); // %rcx = incrementing pointer
-        v.x86().movq("8(" + listReg + ")", destReg);
-        v.x86().leaq("16(" + listReg + ", " + destReg + ", 8)", destReg); // %rdx = destination of rcx
+        if (listReg != null) {
+            v.x86().leaq("16(" + listReg + ")", counterReg); // %rcx = incrementing pointer
+            v.x86().movq("8(" + listReg + ")", destReg);
+            v.x86().leaq("16(" + listReg + ", " + destReg + ", 8)", destReg); // %rdx = destination of rcx
+        }
 
         v.x86().label(loopLabel);
         v.x86().cmpq(counterReg, destReg); // quit loop?
@@ -163,7 +166,7 @@ public class list extends Type {
 
         v.x86().ret(); // return, %rax already populated.
 
-        v.x86().label(__EQ__NEG__); // Check element per element
+        v.x86().label(__EQ__NEG__);
         v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
         v.x86().ret();
     }
@@ -184,22 +187,69 @@ public class list extends Type {
 
     @Override
     public void __lt__(TVisitor v) {
-        // TODO
+        comp(v, "lt", true, false);
     }
 
     @Override
     public void __le__(TVisitor v) {
-        // TODO
+        comp(v, "le", true, true);
     }
 
     @Override
     public void __gt__(TVisitor v) {
-        // TODO
+        comp(v, "gt", false, false);
     }
 
     @Override
     public void __ge__(TVisitor v) {
-        // TODO
+        comp(v, "ge", false, true);
+    }
+
+    private void comp(TVisitor v, String functionName, boolean lower, boolean equal) {
+        final String negLabel = "__list__" + functionName + "__neg__";
+        final String ctnLabel = "__list__" + functionName + "__ctn__";
+        final String brkLabel = "__list__" + functionName + "__brk__";
+        final String compFunction = "__" + functionName + "__";
+
+        v.ofType("%rsi", Type.LIST);
+
+        // get list of minimum length
+        v.x86().call("__comp__length__list__");
+        // %rax = address of LLL
+        // %rcx = address of HLL
+        // %rdx = len(l1) < len(l2)
+
+        v.saveRegisters(() -> {
+            v.x86().leaq("16(%rcx)", "%r13"); // pointer within HLL
+            v.x86().movq("$" + bool.TRUE_LABEL, "%rbx"); // true by default TODO
+
+            // %r12 = pointer within LLL
+            // %r13 = pointer within HLL
+            // %r14 = max value of pointer %r12
+            // %rbx = if lists are equal
+            iter(v, "%rax", "eq", "%r12", "%r14", () -> {
+                v.x86().movq("(%r12)", "%rdi"); // 1st arg, caller
+                v.x86().movq("(%r13)", "%rsi"); // 2nd arg
+                v.selfCall(Type.getOffset(compFunction)); // bool in %rax
+                v.x86().cmpq(1, "8(%rax)");
+
+                v.x86().je(ctnLabel);
+                v.x86().movq("$" + bool.FALSE_LABEL, "%rbx");
+                v.x86().jmp(brkLabel); // break out of loop
+
+                v.x86().label(ctnLabel);
+                v.x86().addq("$8", "%r13"); // increment l2 pointer
+            });
+
+            v.x86().label(brkLabel);
+            v.x86().movq("%rbx", "%rax");
+        }, "%rbx", "%r12", "%r13", "%r14", "%rdx");
+
+        v.x86().ret(); // return, %rax already populated. TODO
+
+        v.x86().label(negLabel);
+        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
+        v.x86().ret();
     }
 
     @Override

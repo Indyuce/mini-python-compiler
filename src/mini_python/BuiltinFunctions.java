@@ -1,6 +1,8 @@
 package mini_python;
 
+import mini_python.annotation.Assembly;
 import mini_python.annotation.Builtin;
+import mini_python.annotation.Kills;
 
 public class BuiltinFunctions {
 
@@ -58,6 +60,30 @@ public class BuiltinFunctions {
         v.x86().movq("8(%rdi)", "%r10"); // get length of string/list
         v.x86().movq("%r10", "8(%rax)"); // write length into new int
 
+        v.x86().ret();
+    }
+
+    /**
+     * %rdi <= &[list1]
+     * %rsi <= &[list2]
+     * %rax => &[list] with the lowest length
+     * %rcx => &[list] with the highest length
+     * %rdx => &bool(len(l1) < len(l2))
+     */
+    @Builtin
+    @Kills(reg = {"%rax", "%rcx", "%rdx"})
+    public static void __comp__length__list__(TVisitor v) {
+        v.x86().movq("8(%rsi)", "%rcx");
+        v.x86().cmpq("%rcx", "8(%rdi)");
+        v.x86().js("__min__2__");
+        v.x86().movq("%rsi", "%rax");
+        v.x86().movq("%rdi", "%rcx");
+        v.x86().movq("$" + bool.FALSE_LABEL, "%rdx");
+        v.x86().ret();
+        v.x86().label("__min__2__"); // len(l1) < len(l2)
+        v.x86().movq("%rdi", "%rax");
+        v.x86().movq("%rsi", "%rcx");
+        v.x86().movq("$" + bool.TRUE_LABEL, "%rdx");
         v.x86().ret();
     }
 

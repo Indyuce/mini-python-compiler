@@ -6,6 +6,6 @@ package mini_python.annotation;
  * therefore useless to push them on the stack
  * before the call and pop them afterward.
  */
-public @interface Saves {
+public @interface Kills {
     public String[] reg();
 }

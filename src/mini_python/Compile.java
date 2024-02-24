@@ -2,7 +2,7 @@ package mini_python;
 
 import mini_python.annotation.Builtin;
 import mini_python.annotation.NotNull;
-import mini_python.annotation.Saves;
+import mini_python.annotation.Kills;
 import mini_python.exception.CompileError;
 import mini_python.exception.NotImplementedError;
 
@@ -145,7 +145,7 @@ class TVisitorImpl implements TVisitor {
 
     @NotNull
     @Override
-    @Saves(reg = {"%rax", "%rbx", "%rcx", "%rdx", "%rsi", "%rdi", "%r8", "%r9", "%r11"})
+    @Kills(reg = {"%r10"})
     public String ofType(String reg, Type... acceptedTypes) {
         final String label = newTextLabel();
 
@@ -175,6 +175,7 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TDef tdef) {
+        // TODO
         x86.label(tdef.f.name); // Add def label
 
         int i;
@@ -291,6 +292,7 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TEunop e) {
+        // TODO
         e.e.accept(this); // %rax = &[e1]
         x86.movq("%rax", "%rdi");
         selfCall(Type.getOffset(e.op));
@@ -298,6 +300,7 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TEident e) {
+        // TODO
         final int offset = e.x.ofs;
         if (offset == -1) throw new CompileError("could not identify variable " + e.x.name);
         x86.movq(offset + "(%rbp)", "%rax");
@@ -305,6 +308,7 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TEcall e) {
+        // TODO
         for (int i = 0; i < e.l.size(); i++) {
             final int idx = e.l.size() - 1 - i;
             final TExpr arg = e.l.get(idx);
@@ -385,6 +389,7 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TSif s) {
+        // TODO
         throw new NotImplementedError();
     }
 
@@ -398,6 +403,7 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TSassign s) {
+        // TODO
         s.e.accept(this); // %rax = &[e]
         x86.movq("%rax", s.x.ofs + "(%rbp)");
     }
@@ -419,6 +425,7 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TSfor s) {
+        // TODO
         throw new NotImplementedError();
     }
 
@@ -429,6 +436,21 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TSset s) {
-        throw new NotImplementedError();
+        // TODO
+        s.e1.accept(this);
+        ofType("%rax", Type.LIST); // %rax = &[list]
+
+        saveRegisters(() -> {
+            s.e2.accept(this);
+            ofType("%rax", Type.INT);
+            x86.movq("8(%rax)", "%rcx"); // %rcx = [int]
+            saveRegisters(() -> {
+                s.e3.accept(this);
+                x86.movq("%rax", "%rdx"); // %rdx = &[e]
+            }, "%rcx");
+        }, "%rax");
+
+        x86.leaq("16(%rax, %rcx, 8)", "%rsi"); // compute address
+        x86.movq("%rdx", "(%rsi)"); // set element
     }
 }
