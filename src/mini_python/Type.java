@@ -7,9 +7,7 @@ import mini_python.exception.CompileError;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * There are no object-specific built-in functions or methods.
@@ -23,16 +21,18 @@ import java.util.Map;
 public abstract class Type {
     public static final Type NONE = new none(), BOOL = new bool(), INT = new int64(), STRING = new string(), LIST = new list();
 
-    public abstract int getOffset();
-
     public abstract String name();
 
-    public String typeNameLabel() {
-        return "__typename__" + name().toLowerCase() + "__";
+    public String classNameLabel() {
+        return "__classname__" + name().toLowerCase() + "__";
     }
 
     public String classDesc() {
-        return "__class__" + name();
+        return classDescLabel(true);
+    }
+
+    public String classDescLabel(boolean dollar) {
+        return (dollar ? "$" : "") + "__class__" + name();
     }
 
     public abstract void staticConstants(TVisitor v);
@@ -124,21 +124,15 @@ public abstract class Type {
         // Static constants if needed
         staticConstants(v);
 
-        // Compile type name in string
-        v.x86().dlabel(typeNameLabel());
+        // Compile class name string
+        v.x86().dlabel(classNameLabel());
         v.x86().string(name());
 
-        v.malloc(8 * (METHODS.size() + 1)); // Allocate memory for type descriptor
-        v.x86().movq("$" + typeNameLabel(), "%rdi");
-        v.x86().movq("%rdi", "0(%rax)"); // save address of type name string
-        for (Method function : METHODS) {
-            final String functionId = asmId(this, function);
-            v.x86().movq("$" + functionId, "%rdi");
-            v.x86().movq("%rdi", getOffset(function.getName()) + "(%rax)");
-        }
-
-        // Write address to type descriptor in type descriptor array
-        v.x86().movq("%rax", (getOffset() * 8) + "(" + Compile.TDA_REG + ")");
+        // Compile type descriptor in .data
+        v.x86().dlabel(classDescLabel(false));
+        v.x86().quad("$" + classNameLabel()); // address of class name string
+        for (Method function : METHODS)
+            v.x86().quad("$" + asmId(this, function));
     }
 
     public static String methodNameLabel(String functionName) {
@@ -146,8 +140,6 @@ public abstract class Type {
     }
 
     public void compileMethods(TVisitor v) {
-        final Type nulled = REGISTERED.put(getOffset(), this);
-        if (nulled != null) throw new CompileError("registered type with duplicate id " + getOffset());
 
         // Write method names as strings
         for (Method parent : METHODS) {
@@ -185,10 +177,4 @@ public abstract class Type {
 
         return "__" + type.name() + function.getName();
     }
-
-    /**
-     * Used to make sure that there are no types compiled
-     * with same numerical identifier.
-     */
-    private static final Map<Integer, Type> REGISTERED = new HashMap<>();
 }

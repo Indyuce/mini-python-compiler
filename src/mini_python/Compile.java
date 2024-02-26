@@ -23,7 +23,11 @@ public class Compile {
 
         x86.section(".section  .note.GNU-stack, \"\", @progbits");
         // Set entry point
-        x86.globl(LABEL_INIT);
+        x86.globl(LABEL_MAIN);
+
+        // Register types
+        for (Type type : Compile.TYPES)
+            type.compileInit(visitor);
 
         // Write misc builtins
         writeBuiltins(visitor);
@@ -39,16 +43,8 @@ public class Compile {
         return x86;
     }
 
-    /**
-     * Callee-saved register which points toward the type
-     * descriptor array. Callee-saved so that NO C methods
-     * or system calls later kills this register. It is safe
-     * as long as we take the convention NEVER to use it.
-     */
-    public static final String TDA_REG = "%r15";
-
     // Labels reserved by the compiler
-    public static final String LABEL_INIT = "main", LABEL_MAIN = "__main__";
+    public static final String LABEL_MAIN = "main";
 
     //endregion
 
@@ -105,23 +101,16 @@ class TVisitorImpl implements TVisitor {
     }
 
     @Override
-    public void malloc(int bytes) {
+    public void newValue(Type type, int bytes) {
         x86.movq(bytes, "%rdi");
         x86.call("__malloc__");
-    }
-
-    @Override
-    public void newValue(Type type, int bytes) {
-        malloc(bytes);
-        x86.movq(type.getOffset(), "0(%rax)");
+        x86.movq(type.classDesc(), "0(%rax)");
     }
 
     @Override
     public void selfCall(int offset) {
         // %rdi = &[e]
-        x86.movq("0(%rdi)", "%r10"); // %r10 = type identifier
-        x86.leaq("(" + Compile.TDA_REG + ", %r10, 8)", "%r10"); // %r10 = address of type descriptor
-        x86.movq("(%r10)", "%r10"); // %r10 = type descriptor
+        x86.movq("0(%rdi)", "%r10"); // %r10 = address of class descriptor
         x86.callstar(offset + "(%r10)"); // finally call corresponding method
     }
 
@@ -153,7 +142,7 @@ class TVisitorImpl implements TVisitor {
         // Get type and check
         x86.movq("0(" + reg + ")", "%r10");
         for (Type accepted : acceptedTypes) {
-            x86.cmpq(accepted.getOffset(), "%r10");
+            x86.cmpq(accepted.classDesc(), "%r10");
             x86.je(label);
         }
 
@@ -220,7 +209,7 @@ class TVisitorImpl implements TVisitor {
     public void visit(Cstring c) {
         final String label = newDataLabel();
         x86.dlabel(label);
-        x86.quad(Type.STRING.getOffset());
+        x86.quad(Type.STRING.classDesc());
         x86.quad(c.s.length());
         x86.string(c.s);
         x86.movq("$" + label, "%rax");
@@ -230,7 +219,7 @@ class TVisitorImpl implements TVisitor {
     public void visit(Cint c) {
         final String label = newDataLabel();
         x86.dlabel(label);
-        x86.quad(Type.INT.getOffset());
+        x86.quad(Type.INT.classDesc());
         x86.quad(c.i);
         x86.movq("$" + label, "%rax");
     }
@@ -362,7 +351,7 @@ class TVisitorImpl implements TVisitor {
             x86.leaq("16(, %r13, 8)", "%rdi"); // Allocate memory for list
             x86.call("__malloc__");
             x86.movq("%rax", "%r14"); // %r14 = &[list]
-            x86.movq(Type.LIST.getOffset(), "0(%r14)"); // write type identifier
+            x86.movq(Type.LIST.classDesc(), "0(%r14)"); // write type identifier
             x86.movq("%r13", "8(%r14)"); // write length
 
             final String loop = newTextLabel(), end = newTextLabel();

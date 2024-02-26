@@ -16,11 +16,6 @@ public class list extends Type {
             BRACKET_CLOSE_VALUE = "]";
 
     @Override
-    public int getOffset() {
-        return 4;
-    }
-
-    @Override
     public String name() {
         return "list";
     }
@@ -46,7 +41,7 @@ public class list extends Type {
         v.x86().movq("%rdi", "%r9"); // %r9 = len(l1 + l2)
         v.x86().leaq("16(, %rdi, 8)", "%rdi"); // %rdi = 16 + 2 * (len(l1) + len(l2))
         v.saveRegisters(() -> v.x86().call("__malloc__"), "%r8", "%rsi", "%r9"); // %rax = &(l1 + l2)
-        v.x86().movq(Type.LIST.getOffset(), "0(%rax)"); // set type identifier
+        v.x86().movq(Type.LIST.classDesc(), "0(%rax)"); // set type identifier
         v.x86().movq("%r9", "8(%rax)"); // set list size
 
         // %rcx / %rdx in list1/list2
@@ -137,7 +132,7 @@ public class list extends Type {
     @Override
     public void __eq__(TVisitor v) {
         v.x86().movq("0(%rsi)", "%r10");
-        v.x86().cmpq(Type.LIST.getOffset(), "%r10"); // check type
+        v.x86().cmpq(Type.LIST.classDesc(), "%r10"); // check type
         v.x86().jne(__EQ__NEG__);
 
         v.x86().movq("8(%rsi)", "%r10"); // check length
@@ -228,7 +223,7 @@ public class list extends Type {
 
         // Check type - in fact, this shouldn't _compile_. But in this case it should throw a panic error - TODO
         v.x86().movq("0(%rsi)", "%r10");
-        v.x86().cmpq(Type.LIST.getOffset(), "%r10"); // check type
+        v.x86().cmpq(Type.LIST.classDesc(), "%r10"); // check type
         v.x86().jne(__EQ__NEG__);
 
         // get list of minimum length

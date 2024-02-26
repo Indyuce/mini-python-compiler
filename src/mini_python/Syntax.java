@@ -788,9 +788,6 @@ interface TVisitor {
     @Difference
     X86_64 x86();
 
-    @Difference
-    void malloc(int bytes);
-
     /**
      * - Allocates memory in heap
      * - Sets type identifier of new value

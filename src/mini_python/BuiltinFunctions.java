@@ -40,19 +40,6 @@ public class BuiltinFunctions {
     }
 
     @Builtin
-    public static void main(TVisitor v) {
-
-        v.malloc(8 * Compile.TYPES.size()); // Allocate memory for TDA
-        v.x86().movq("%rax", Compile.TDA_REG);
-
-        // Register types
-        for (Type type : Compile.TYPES)
-            type.compileInit(v);
-
-        v.x86().jmp(Compile.LABEL_MAIN);
-    }
-
-    @Builtin
     public static void __len__(TVisitor v) {
         v.ofType("%rdi", Type.STRING, Type.LIST);
 

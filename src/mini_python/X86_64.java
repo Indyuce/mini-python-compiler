@@ -1,5 +1,7 @@
 package mini_python;
 
+import mini_python.annotation.Difference;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -387,6 +389,11 @@ public class X86_64 {
 
     X86_64 quad(long l) {
         return data(".quad " + l);
+    }
+
+    @Difference
+    X86_64 quad(String s) {
+        return data(".quad " + s);
     }
 
     X86_64 globl(String l) {

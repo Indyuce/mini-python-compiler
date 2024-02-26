@@ -14,11 +14,6 @@ public class int64 extends Type {
             ZERO_LABEL = "__int__zero__";
 
     @Override
-    public int getOffset() {
-        return 2;
-    }
-
-    @Override
     public String name() {
         return "int";
     }
@@ -29,7 +24,7 @@ public class int64 extends Type {
         v.x86().string(PRINT_FORMAT_VALUE);
 
         v.x86().dlabel(ZERO_LABEL);
-        v.x86().quad(Type.INT.getOffset());
+        v.x86().quad(Type.INT.classDesc());
         v.x86().quad(0);
     }
 
@@ -121,9 +116,9 @@ public class int64 extends Type {
     public void __eq__(TVisitor v) {
         // Check type of arg (int/bool)
         v.x86().movq("0(%rsi)", "%r10");
-        v.x86().cmpq(Type.INT.getOffset(), "%r10");
+        v.x86().cmpq(Type.INT.classDesc(), "%r10");
         v.x86().je(__EQ__POS__);
-        v.x86().cmpq(Type.BOOL.getOffset(), "%r10");
+        v.x86().cmpq(Type.BOOL.classDesc(), "%r10");
         v.x86().je(__EQ__POS__);
         v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
         v.x86().ret();
@@ -142,9 +137,9 @@ public class int64 extends Type {
     public void __neq__(TVisitor v) {
         // Check type of arg (int/bool)
         v.x86().movq("0(%rsi)", "%r10");
-        v.x86().cmpq(Type.INT.getOffset(), "%r10");
+        v.x86().cmpq(Type.INT.classDesc(), "%r10");
         v.x86().je(__NEQ__POS__);
-        v.x86().cmpq(Type.BOOL.getOffset(), "%r10");
+        v.x86().cmpq(Type.BOOL.classDesc(), "%r10");
         v.x86().je(__NEQ__POS__);
         v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
         v.x86().ret();

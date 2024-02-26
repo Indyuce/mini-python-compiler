@@ -10,11 +10,6 @@ public class string extends Type {
             LINE_BREAK_VALUE = "\n";
 
     @Override
-    public int getOffset() {
-        return 3;
-    }
-
-    @Override
     public String name() {
         return "string";
     }
@@ -84,7 +79,7 @@ public class string extends Type {
     @Override
     public void __eq__(TVisitor v) {
         v.x86().movq("0(%rsi)", "%r10");
-        v.x86().cmpq(Type.STRING.getOffset(), "%r10"); // Check type of arg
+        v.x86().cmpq(Type.STRING.classDesc(), "%r10"); // Check type of arg
         v.x86().je(__EQ__POS__);
         v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
         v.x86().ret();
@@ -105,7 +100,7 @@ public class string extends Type {
     @Override
     public void __neq__(TVisitor v) {
         v.x86().movq("0(%rsi)", "%r10");
-        v.x86().cmpq(Type.STRING.getOffset(), "%r10"); // Check type of arg
+        v.x86().cmpq(Type.STRING.classDesc(), "%r10"); // Check type of arg
         v.x86().je(__NEQ__POS__);
         v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
         v.x86().ret();

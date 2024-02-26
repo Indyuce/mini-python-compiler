@@ -14,11 +14,6 @@ public class bool extends Type {
             FALSE_PRINT_FORMAT_VALUE = "False";
 
     @Override
-    public int getOffset() {
-        return 1;
-    }
-
-    @Override
     public String name() {
         return "bool";
     }
@@ -26,11 +21,11 @@ public class bool extends Type {
     @Override
     public void staticConstants(TVisitor v) {
         v.x86().dlabel(TRUE_LABEL);
-        v.x86().quad(Type.BOOL.getOffset());
+        v.x86().quad(Type.BOOL.classDesc());
         v.x86().quad(1);
 
         v.x86().dlabel(FALSE_LABEL);
-        v.x86().quad(Type.BOOL.getOffset());
+        v.x86().quad(Type.BOOL.classDesc());
         v.x86().quad(0);
 
         v.x86().dlabel(TRUE_PRINT_FORMAT_LABEL);
