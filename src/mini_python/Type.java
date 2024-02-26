@@ -130,7 +130,7 @@ public abstract class Type {
     }
 
     public static String methodNameLabel(String functionName) {
-        return "__fctnname" + functionName;
+        return "__fctname" + functionName;
     }
 
     public void compileMethods(TVisitor v) {

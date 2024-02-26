@@ -806,20 +806,23 @@ interface TVisitor {
     @Difference
     void selfCall(int offset);
 
+    @NotNull
+    @Difference
+    @Kills(reg = {"%r10"})
+    String ofType(String reg, @Nullable Type caller, String callerFunction, Type... acceptedTypes);
+
     /**
      * Compiles a fragment of code that checks for given types.
      * If the value in provided register is not one of the
      * requested types, program will exit with an error message.
      *
-     * @param reg            Register holding address to value to check
-     * @param caller         Type of object calling
-     * @param callerFunction Function name.
-     * @param acceptedTypes  Accepted types
+     * @param reg           Register holding address to value to check
+     * @param ifError       Compiled code executed when type does not match
+     * @param acceptedTypes Accepted types
      */
     @NotNull
     @Difference
-    @Kills(reg = {"%r10"})
-    String ofType(String reg, @Nullable Type caller, String callerFunction, Type... acceptedTypes);
+    String ofType(String reg, Runnable ifError, Type... acceptedTypes);
 
     /**
      * Saves frequently used caller-saved registers and wraps

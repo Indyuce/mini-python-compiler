@@ -41,7 +41,10 @@ public class BuiltinFunctions {
 
     @Builtin
     public static void __len__(TVisitor v) {
-        v.ofType("%rdi", null, "len", Type.STRING, Type.LIST);
+        v.x86().dlabel(Type.methodNameLabel("__len__"));
+        v.x86().string("len");
+
+        v.ofType("%rdi", null, "__len__", Type.STRING, Type.LIST);
 
         v.saveRegisters(() -> v.newValue(Type.INT, 16), "%rdi"); // %rax = &[new int]
         v.x86().movq("8(%rdi)", "%r10"); // get length of string/list
@@ -76,6 +79,7 @@ public class BuiltinFunctions {
 
     /**
      * Evaluates %rdi<=%rsi
+     *
      * @param v Visitor
      */
     @Builtin
@@ -88,11 +92,11 @@ public class BuiltinFunctions {
 
         v.x86().cmpq("%r8", "%r9");
         v.x86().jl("__comp__lt__int__if__");
-        v.x86().movq("$"+ bool.FALSE_LABEL, "%rax");
+        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
         v.x86().ret();
 
         v.x86().label("__comp__lt__int__if__");
-        v.x86().movq("$"+ bool.TRUE_LABEL, "%rax");
+        v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
         v.x86().ret();
     }
 
@@ -106,11 +110,11 @@ public class BuiltinFunctions {
 
         v.x86().cmpq("%r8", "%r9");
         v.x86().jle("__comp__le__int__if__");
-        v.x86().movq("$"+ bool.FALSE_LABEL, "%rax");
+        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
         v.x86().ret();
 
         v.x86().label("__comp__le__int__if__");
-        v.x86().movq("$"+ bool.TRUE_LABEL, "%rax");
+        v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
         v.x86().ret();
     }
 
@@ -124,11 +128,11 @@ public class BuiltinFunctions {
 
         v.x86().cmpq("%r8", "%r9");
         v.x86().jg("__comp__gt__int__if__");
-        v.x86().movq("$"+ bool.FALSE_LABEL, "%rax");
+        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
         v.x86().ret();
 
         v.x86().label("__comp__gt__int__if__");
-        v.x86().movq("$"+ bool.TRUE_LABEL, "%rax");
+        v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
         v.x86().ret();
     }
 
@@ -142,11 +146,11 @@ public class BuiltinFunctions {
 
         v.x86().cmpq("%r8", "%r9");
         v.x86().jge("__comp__ge__int__if__");
-        v.x86().movq("$"+ bool.FALSE_LABEL, "%rax");
+        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
         v.x86().ret();
 
         v.x86().label("__comp__ge__int__if__");
-        v.x86().movq("$"+ bool.TRUE_LABEL, "%rax");
+        v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
         v.x86().ret();
     }
 

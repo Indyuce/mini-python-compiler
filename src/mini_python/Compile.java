@@ -1,8 +1,8 @@
 package mini_python;
 
 import mini_python.annotation.Builtin;
-import mini_python.annotation.NotNull;
 import mini_python.annotation.Kills;
+import mini_python.annotation.NotNull;
 import mini_python.annotation.Nullable;
 import mini_python.exception.CompileError;
 import mini_python.exception.NotImplementedError;
@@ -127,10 +127,15 @@ class TVisitorImpl implements TVisitor {
             x86.popq(regs[regs.length - 1 - i]);
     }
 
+    @Override
+    public String ofType(String reg, @Nullable Type caller, String callerFunction, Type... acceptedTypes) {
+        return ofType(reg, () -> RuntimeErr.invalidArgType(this, caller, callerFunction, reg), acceptedTypes);
+    }
+
     @NotNull
     @Override
     @Kills(reg = {"%r10"})
-    public String ofType(String reg, @Nullable Type caller, String callerFunctionId, Type... acceptedTypes) {
+    public String ofType(String reg, Runnable ifError, Type... acceptedTypes) {
         final String label = newTextLabel();
 
         // Get type and check
@@ -140,11 +145,8 @@ class TVisitorImpl implements TVisitor {
             x86.je(label);
         }
 
-        // Error, exit program TODO
-        //x86.movq("$" + Type.methodNameLabel(callerFunctionId), "%rsi");
-        //x86.movq("$" + (caller != null ? caller.classNameLabel() : none.NONE_STR_LABEL), "%rdx");
-        //x86.movq("8(%r10)", "%rcx");
-        //RuntimeErr.INVALID_ARG_TYPE.compileThrow(this);
+        // Error, exit program
+        ifError.run();
 
         x86.label(label);
         return label;
