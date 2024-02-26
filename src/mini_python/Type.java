@@ -3,6 +3,7 @@ package mini_python;
 import mini_python.annotation.Builtin;
 import mini_python.annotation.Delegated;
 import mini_python.annotation.NotNull;
+import mini_python.annotation.Undefined;
 import mini_python.exception.CompileError;
 
 import java.lang.reflect.Method;
@@ -152,6 +153,12 @@ public abstract class Type {
             try {
                 final Method method = this.getClass().getDeclaredMethod(parent.getName(), TVisitor.class);
                 if (method.isAnnotationPresent(Delegated.class)) continue; // Method delegated to other type
+
+                // Method not defined, compile error throwing
+                if (method.isAnnotationPresent(Undefined.class)) {
+                    RuntimeErr.methodNotDefined(v, this, method.getName());
+                    continue;
+                }
 
                 // Label method in .text
                 v.x86().label(asmId(this, method));

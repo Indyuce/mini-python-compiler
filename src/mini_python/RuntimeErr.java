@@ -1,27 +1,37 @@
 package mini_python;
 
-public enum RuntimeErr {
-    METHOD_NOT_DEFINED("method '%s' not defined for type '%s'"),
-
-    ;
-
-    final String lbl, message;
-
-    RuntimeErr(String message) {
-        this.lbl = "__ermsg__" + name().toLowerCase() + "";
-        this.message = message;
-    }
-
+public class RuntimeErr {
     public static void registerConstants(TVisitor v) {
-        for (RuntimeErr err : values()) {
+        for (ErrorEnum err : ErrorEnum.values()) {
             v.x86().dlabel(err.lbl);
             v.x86().string(err.message);
         }
     }
 
-    public void compileThrow(TVisitor v) {
-        v.x86().movq("$" + lbl, "%rdi");
+    public static void methodNotDefined(TVisitor v, Type callerType, String callerFunction) {
+        v.x86().movq("$" + ErrorEnum.METHOD_NOT_DEFINED.lbl, "%rdi");
+        v.x86().movq("$" + Type.methodNameLabel(callerFunction), "%rsi");
+        v.x86().movq(callerType.classDesc(), "%rdx");
+        v.x86().movq("8(%rdx)", "%rdx");
+        compileThrow(v);
+    }
+
+    private static void compileThrow(TVisitor v) {
         v.x86().call("__print__"); // print error msg
         v.x86().call("__er__"); // exit program
+    }
+
+    enum ErrorEnum {
+        METHOD_NOT_DEFINED("method '%s' not defined for type '%s'"),
+        INVALID_ARG_TYPE("method '%s' of type '%s' does not accept arg of type '%s'"),
+
+        ;
+
+        final String lbl, message;
+
+        ErrorEnum(String message) {
+            this.lbl = "__ermsg__" + name().toLowerCase() + "__";
+            this.message = message;
+        }
     }
 }

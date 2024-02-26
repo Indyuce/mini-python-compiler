@@ -3,6 +3,7 @@ package mini_python;
 import mini_python.annotation.Builtin;
 import mini_python.annotation.NotNull;
 import mini_python.annotation.Kills;
+import mini_python.annotation.Nullable;
 import mini_python.exception.CompileError;
 import mini_python.exception.NotImplementedError;
 
@@ -128,15 +129,10 @@ class TVisitorImpl implements TVisitor {
             x86.popq(regs[regs.length - 1 - i]);
     }
 
-    @Override
-    public void err() {
-        x86.jmp("__err__");
-    }
-
     @NotNull
     @Override
     @Kills(reg = {"%r10"})
-    public String ofType(String reg, Type... acceptedTypes) {
+    public String ofType(String reg, @Nullable Type caller, String callerFunctionId, Type... acceptedTypes) {
         final String label = newTextLabel();
 
         // Get type and check
@@ -146,8 +142,11 @@ class TVisitorImpl implements TVisitor {
             x86.je(label);
         }
 
-        // Error, exit program
-        err();
+        // Error, exit program TODO
+        //x86.movq("$" + Type.methodNameLabel(callerFunctionId), "%rsi");
+        //x86.movq("$" + (caller != null ? caller.classNameLabel() : none.NONE_STR_LABEL), "%rdx");
+        //x86.movq("8(%r10)", "%rcx");
+        //RuntimeErr.INVALID_ARG_TYPE.compileThrow(this);
 
         x86.label(label);
         return label;
@@ -311,11 +310,11 @@ class TVisitorImpl implements TVisitor {
     @Override
     public void visit(TEget e) {
         e.e1.accept(this);
-        ofType("%rax", Type.LIST); // %rax = &[list]
+        ofType("%rax", Type.LIST, "__get__", Type.LIST); // %rax = &[list]
 
         saveRegisters(() -> {
             e.e2.accept(this);
-            ofType("%rax", Type.INT);
+            ofType("%rax", Type.LIST, "__get__", Type.INT);
             x86.movq("8(%rax)", "%rsi"); // %rsi = int value
         }, "%rax");
 
@@ -344,7 +343,7 @@ class TVisitorImpl implements TVisitor {
     public void visit(TErange e) {
         saveRegisters(() -> {
             e.e.accept(this);
-            ofType("%rax", Type.INT);
+            ofType("%rax", null, "range", Type.INT);
             x86.movq("8(%rax)", "%r13"); // %r13 = max counter
             x86.xorq("%r12", "%r12"); // %r12 = current counter
 
@@ -429,11 +428,11 @@ class TVisitorImpl implements TVisitor {
     public void visit(TSset s) {
         // TODO
         s.e1.accept(this);
-        ofType("%rax", Type.LIST); // %rax = &[list]
+        ofType("%rax", Type.LIST, "__set__", Type.LIST); // %rax = &[list]
 
         saveRegisters(() -> {
             s.e2.accept(this);
-            ofType("%rax", Type.INT);
+            ofType("%rax", null, "__set__", Type.INT);
             x86.movq("8(%rax)", "%rcx"); // %rcx = [int]
             saveRegisters(() -> {
                 s.e3.accept(this);

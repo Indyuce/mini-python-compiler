@@ -1,9 +1,10 @@
 package mini_python;
 
 import mini_python.annotation.Delegated;
-import mini_python.annotation.Kills;
+import mini_python.annotation.Undefined;
 import mini_python.annotation.Nullable;
 import mini_python.exception.FunctionDelegatedError;
+import mini_python.exception.MethodNotDefinedError;
 
 public class list extends Type {
 
@@ -20,7 +21,6 @@ public class list extends Type {
         return "list";
     }
 
-
     @Override
     public void staticConstants(TVisitor v) {
         v.x86().dlabel(BRACKET_OPEN_LABEL);
@@ -33,7 +33,7 @@ public class list extends Type {
 
     @Override
     public void __add__(TVisitor v) {
-        v.ofType("%rsi", Type.LIST); // %rsi = &l2
+        v.ofType("%rsi", Type.LIST, "__add__", Type.LIST); // %rsi = &l2
 
         v.x86().movq("%rdi", "%r8"); // save &l1 in %r8
         v.x86().movq("8(%rdi)", "%rdi");
@@ -101,23 +101,27 @@ public class list extends Type {
     }
 
     @Override
+    @Undefined
     public void __sub__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __mul__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __div__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __mod__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     private static final String
@@ -220,7 +224,7 @@ public class list extends Type {
         final String compFunction = "__" + functionName + "__";
         final String switch_counter = "__list_" + functionName + "__"; // To append number to it
 
-        v.ofType("%rsi", Type.LIST);
+        v.ofType("%rsi", Type.LIST, compFunction, Type.LIST);
 
         // Check type - in fact, this shouldn't _compile_. But in this case it should throw a panic error - TODO
         v.x86().movq("0(%rsi)", "%r10");
@@ -334,8 +338,9 @@ public class list extends Type {
     }
 
     @Override
+    @Undefined
     public void __neg__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
@@ -345,8 +350,9 @@ public class list extends Type {
     }
 
     @Override
+    @Undefined
     public void __int__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override

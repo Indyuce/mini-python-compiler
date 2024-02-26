@@ -41,7 +41,7 @@ public class BuiltinFunctions {
 
     @Builtin
     public static void __len__(TVisitor v) {
-        v.ofType("%rdi", Type.STRING, Type.LIST);
+        v.ofType("%rdi", null, "len", Type.STRING, Type.LIST);
 
         v.saveRegisters(() -> v.newValue(Type.INT, 16), "%rdi"); // %rax = &[new int]
         v.x86().movq("8(%rdi)", "%r10"); // get length of string/list

@@ -1,5 +1,8 @@
 package mini_python;
 
+import mini_python.annotation.Undefined;
+import mini_python.exception.MethodNotDefinedError;
+
 public class none extends Type {
 
     public static final String
@@ -23,63 +26,75 @@ public class none extends Type {
     }
 
     @Override
+    @Undefined
     public void __add__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __sub__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __mul__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __div__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __mod__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __eq__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __neq__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __lt__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __le__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __gt__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __ge__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __neg__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override

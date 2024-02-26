@@ -1,7 +1,9 @@
 package mini_python;
 
 import mini_python.annotation.Difference;
+import mini_python.annotation.Kills;
 import mini_python.annotation.NotNull;
+import mini_python.annotation.Nullable;
 
 import java.util.LinkedList;
 import java.util.Objects;
@@ -797,22 +799,22 @@ interface TVisitor {
     void newValue(Type type, int bytes);
 
     @Difference
-    void err();
-
-    @Difference
     void selfCall(int offset);
 
     /**
      * Compiles a fragment of code that checks for given types.
      * If the value in provided register is not one of the
-     * requested types, program will exit.
+     * requested types, program will exit with an error message.
      *
-     * @param register      Register pointing to value to check
-     * @param acceptedTypes Accepted types
+     * @param reg            Register holding address to value to check
+     * @param caller         Type of object calling
+     * @param callerFunction Function name.
+     * @param acceptedTypes  Accepted types
      */
     @NotNull
     @Difference
-    String ofType(String register, Type... acceptedTypes);
+    @Kills(reg = {"%r10"})
+    String ofType(String reg, @Nullable Type caller, String callerFunction, Type... acceptedTypes);
 
     /**
      * Saves frequently used caller-saved registers and wraps

@@ -1,7 +1,9 @@
 package mini_python;
 
 import mini_python.annotation.Delegated;
+import mini_python.annotation.Undefined;
 import mini_python.exception.FunctionDelegatedError;
+import mini_python.exception.MethodNotDefinedError;
 
 public class bool extends Type {
 
@@ -36,28 +38,33 @@ public class bool extends Type {
     }
 
     @Override
+    @Undefined
     public void __add__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __sub__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __mul__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __div__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __mod__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
@@ -97,8 +104,9 @@ public class bool extends Type {
     }
 
     @Override
+    @Undefined
     public void __neg__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override

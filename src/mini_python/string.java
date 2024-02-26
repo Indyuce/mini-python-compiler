@@ -1,7 +1,9 @@
 package mini_python;
 
 import mini_python.annotation.Delegated;
+import mini_python.annotation.Undefined;
 import mini_python.exception.FunctionDelegatedError;
+import mini_python.exception.MethodNotDefinedError;
 
 public class string extends Type {
 
@@ -23,7 +25,7 @@ public class string extends Type {
     @Override
     public void __add__(TVisitor v) {
 
-        v.ofType("%rsi", Type.STRING);
+        v.ofType("%rsi", Type.STRING, "__add__", Type.STRING);
 
         v.saveRegisters(() -> {
             v.x86().movq("%rdi", "%r12"); // %r12 = &s1
@@ -55,23 +57,27 @@ public class string extends Type {
     }
 
     @Override
+    @Undefined
     public void __sub__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __mul__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __div__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
+    @Undefined
     public void __mod__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     private static final String __EQ__POS__ = "__string__eq__pos__";
@@ -124,8 +130,8 @@ public class string extends Type {
      * @param code Check to perform; all flags are set after calling
      *             method strcmp. Result must be put in register %cl
      */
-    private void comp(TVisitor v, Runnable code) {
-        v.ofType("%rsi", Type.STRING);
+    private void comp(TVisitor v, String callerFunction, Runnable code) {
+        v.ofType("%rsi", Type.STRING, callerFunction, Type.STRING);
         v.x86().addq("$16", "%rdi");
         v.x86().addq("$16", "%rsi");
         v.x86().call("__strcmp__");
@@ -138,27 +144,28 @@ public class string extends Type {
 
     @Override
     public void __lt__(TVisitor v) {
-        comp(v, () -> v.x86().setl("%cl"));
+        comp(v, "__lt__", () -> v.x86().setl("%cl"));
     }
 
     @Override
     public void __le__(TVisitor v) {
-        comp(v, () -> v.x86().setle("%cl"));
+        comp(v, "__le__",() -> v.x86().setle("%cl"));
     }
 
     @Override
     public void __gt__(TVisitor v) {
-        comp(v, () -> v.x86().setg("%cl"));
+        comp(v, "__gt__",() -> v.x86().setg("%cl"));
     }
 
     @Override
     public void __ge__(TVisitor v) {
-        comp(v, () -> v.x86().setge("%cl"));
+        comp(v, "__ge__",() -> v.x86().setge("%cl"));
     }
 
     @Override
+    @Undefined
     public void __neg__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
@@ -168,8 +175,9 @@ public class string extends Type {
     }
 
     @Override
+    @Undefined
     public void __int__(TVisitor v) {
-        v.err();
+        throw new MethodNotDefinedError();
     }
 
     @Override
