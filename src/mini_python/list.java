@@ -218,6 +218,7 @@ public class list extends Type {
         final String ctnLabel = "__list__" + functionName + "__ctn__";
         final String brkLabel = "__list__" + functionName + "__brk__";
         final String compFunction = "__" + functionName + "__";
+        final String switch_counter = "__list_" + functionName + "__"; // To append number to it
 
         v.ofType("%rsi", Type.LIST);
 
@@ -252,12 +253,63 @@ public class list extends Type {
             // %r13 = pointer within HLL
             // %r14 = max value of pointer %r12
             // %rbx = if lists are equal
-            iter(v, "%rax", "eq_"+functionName+"_", "%r12", "%r14", () -> {
+            iter(v, "%rax", "cmp_"+functionName+"_", "%r12", "%r14", () -> {
                 v.x86().movq("(%r12)", "%rdi"); // 1st arg (from caller parser)
                 v.x86().movq("(%r13)", "%rsi"); // 2nd arg
+                v.selfCall(Type.getOffset(compFunction));
+
+                v.x86().movq("0(%rdi)", "%r10"); // Get type of argument 1
+                v.x86().movq("0(%rsi)", "%r9"); // Get type of argument 2
+
+                v.x86().cmpq("%r10", "%r9"); // Compare types of both arguments
+
+                // TODO - If different, throw runtime error
+
+                // Now : switch statement depending on type!
+
+
+                // none, bool, int, string, list
+                // To be honest using a jump table is the best way of doing it - TODO léger.
+                v.x86().cmpq("%r10", "$0");
+                v.x86().jne(switch_counter+"not0");
+                // Code for 0
+
+                // End code for 0
+                v.x86().label(switch_counter+"not0");
+                v.x86().cmpq("%r10", "$1");
+                v.x86().jne(switch_counter+"not1");
+                // Code for 1
+
+                // End code for 1
+                v.x86().label(switch_counter+"not1");
+                v.x86().cmpq("%r10", "$2");
+                v.x86().jne(switch_counter+"not2");
+                // Code for 2
+
+                // End code for 2
+                v.x86().label(switch_counter+"not2");
+                v.x86().cmpq("%r10", "$3");
+                v.x86().jne(switch_counter+"not3");
+                // Code for 3
+
+                // End code for 3
+                v.x86().label(switch_counter+"not3");
+                v.x86().cmpq("%r10", "$4");
+                v.x86().jne(switch_counter+"not4");
+                // Code for 4
+
+                // End code for 4
+                v.x86().label(switch_counter+"not4");
+                v.x86().cmpq("%r10", "$5");
+                v.x86().jne(switch_counter+"not5");
+
+                v.x86().label(switch_counter+"not5");
 
                 v.selfCall(Type.getOffset(compFunction)); // bool in %rax
                 v.x86().cmpq(1, "8(%rax)");
+
+
+                v.x86().label("__list__cmp_"+functionName+"__typeif_");
 
 
                 v.x86().je(ctnLabel);
