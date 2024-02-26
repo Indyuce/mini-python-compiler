@@ -29,6 +29,9 @@ public class Compile {
         // Register types and their functions
         Type.registerTypes(visitor);
 
+        // Register constants for errors
+        RuntimeErr.registerConstants(visitor);
+
         // Write misc builtins
         writeBuiltins(visitor);
 
