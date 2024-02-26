@@ -24,6 +24,12 @@ class Asm extends LabelAsm {
     }
 }
 
+class Section extends LabelAsm {
+    Section(String s) {
+        this.s = s;
+    }
+}
+
 /**
  * programme assembleur x86-64
  */
@@ -58,6 +64,16 @@ public class X86_64 {
      */
     X86_64 label(String s) {
         this.text.add(new Lab(s));
+        return this;
+    }
+
+    /**
+     * Ajoute une ligne de section qui précède tout le programme
+     * @param s Ligne se section
+     * @return Self
+     */
+    X86_64 section(String s) {
+        this.text.add(new Section(s));
         return this;
     }
 
@@ -383,11 +399,17 @@ public class X86_64 {
     void printToFile(String file) {
         try {
             Writer writer = new FileWriter(file);
+            for (LabelAsm lasm : this.text) {
+                if (lasm instanceof Section) {
+                    writer.write(lasm.s + "\n");
+                }
+            }
             writer.write("\t.text\n");
             for (LabelAsm lasm : this.text) {
                 if (lasm instanceof Lab) {
                     writer.write(lasm.s + ":\n");
                 } else writer.write(lasm.s);
+
             }
             writer.write(this.inline.toString());
             writer.write("\t.data\n");

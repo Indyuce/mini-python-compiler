@@ -21,6 +21,7 @@ public class Compile {
         final X86_64 x86 = new X86_64();
         final TVisitor visitor = new TVisitorImpl(x86);
 
+        //x86.section(".section  .note.GNU-stack, \"x\", @progbits");
         // Set entry point
         x86.globl(LABEL_INIT);
 
@@ -405,6 +406,7 @@ class TVisitorImpl implements TVisitor {
     public void visit(TSassign s) {
         // TODO
         s.e.accept(this); // %rax = &[e]
+
         x86.movq("%rax", s.x.ofs + "(%rbp)");
     }
 

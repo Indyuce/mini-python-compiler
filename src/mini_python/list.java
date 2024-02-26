@@ -1,6 +1,7 @@
 package mini_python;
 
 import mini_python.annotation.Delegated;
+import mini_python.annotation.Kills;
 import mini_python.annotation.Nullable;
 import mini_python.exception.FunctionDelegatedError;
 
@@ -129,6 +130,10 @@ public class list extends Type {
             __EQ__BRK__ = "__list__eq__brk__",
             __EQ__CTN__ = "__list__eq__ctn__";
 
+    /**
+     * %rdi : first list
+     * %rsi : second list
+     */
     @Override
     public void __eq__(TVisitor v) {
         v.x86().movq("0(%rsi)", "%r10");
@@ -205,6 +210,14 @@ public class list extends Type {
         comp(v, "ge", false, true);
     }
 
+    /**
+     * %rdi : first list
+     * %rsi : second list
+     * @param v x86 visitor
+     * @param functionName function nominator
+     * @param lower If it's < or >
+     * @param equal If it's <= (resp =>) or not.
+     */
     private void comp(TVisitor v, String functionName, boolean lower, boolean equal) {
         final String negLabel = "__list__" + functionName + "__neg__";
         final String ctnLabel = "__list__" + functionName + "__ctn__";
@@ -213,11 +226,28 @@ public class list extends Type {
 
         v.ofType("%rsi", Type.LIST);
 
+        // Check type - in fact, this shouldn't _compile_. But in this case it should throw a panic error - TODO
+        v.x86().movq("0(%rsi)", "%r10");
+        v.x86().cmpq(Type.LIST.getOffset(), "%r10"); // check type
+        v.x86().jne(__EQ__NEG__);
+
         // get list of minimum length
-        v.x86().call("__comp__length__list__");
-        // %rax = address of LLL
-        // %rcx = address of HLL
-        // %rdx = len(l1) < len(l2)
+
+        // Switch list 1 and 2 such that list 1 is the shorter one, list 2 is the longer one
+        {
+            String label_name = "__min__"+functionName+"__2__";
+            v.x86().movq("8(%rsi)", "%rcx");
+            v.x86().cmpq("%rcx", "8(%rdi)");
+            v.x86().js(label_name);
+            v.x86().movq("%rsi", "%rax");
+            v.x86().movq("%rdi", "%rcx");
+            v.x86().label(label_name); // len(l1) < len(l2)
+            v.x86().movq("%rdi", "%rax");
+            v.x86().movq("%rsi", "%rcx");
+        }
+
+        // First list : %rax (lowest)
+        // Second list : %rcx (highest)
 
         v.saveRegisters(() -> {
             v.x86().leaq("16(%rcx)", "%r13"); // pointer within HLL
@@ -228,17 +258,21 @@ public class list extends Type {
             // %r14 = max value of pointer %r12
             // %rbx = if lists are equal
             iter(v, "%rax", "eq_"+functionName+"_", "%r12", "%r14", () -> {
-                v.x86().movq("(%r12)", "%rdi"); // 1st arg, caller
+                v.x86().movq("(%r12)", "%rdi"); // 1st arg (from caller parser)
                 v.x86().movq("(%r13)", "%rsi"); // 2nd arg
+
                 v.selfCall(Type.getOffset(compFunction)); // bool in %rax
                 v.x86().cmpq(1, "8(%rax)");
+
 
                 v.x86().je(ctnLabel);
                 v.x86().movq("$" + bool.FALSE_LABEL, "%rbx");
                 v.x86().jmp(brkLabel); // break out of loop
 
                 v.x86().label(ctnLabel);
-                v.x86().addq("$8", "%r13"); // increment l2 pointer
+
+
+                v.x86().addq("$8", "%r13"); // increment list_2 pointer
             });
 
             v.x86().label(brkLabel);

@@ -87,6 +87,28 @@ public class BuiltinFunctions {
         v.x86().ret();
     }
 
+    /**
+     * Evaluates %rdi<=%rsi
+     * @param v Visitor
+     */
+    @Builtin
+    @Kills(reg = {"%rax", "%r8", "%r9"})
+    public static void __comp__lt__int__(TVisitor v) {
+        // Perform %rdi <= %rsi
+        // Return true
+        v.x86().movq("8(%rdi)", "%r8");
+        v.x86().movq("8(%rsi)", "%r9");
+
+        v.x86().cmpq("%r8", "%r9");
+        v.x86().jl("__comp__lt__int__if__");
+        v.x86().movq("$"+ bool.FALSE_LABEL, "%rax");
+        v.x86().ret();
+
+        v.x86().label("__comp__lt__int__if__");
+        v.x86().movq("$"+ bool.TRUE_LABEL, "%rax");
+        v.x86().ret();
+    }
+
     @Builtin
     public static void __err__(TVisitor v) {
         v.x86().movq(60, "%rax"); // syscall number
