@@ -18,7 +18,7 @@ public class none extends Type {
     @Override
     public void staticConstants(TVisitor v) {
         v.x86().dlabel(NONE_LABEL);
-        v.x86().quad(Type.NONE.classDesc());
+        v.x86().quadLabel(Type.NONE.classDescLabel());
         v.x86().quad(0);
 
         v.x86().dlabel(NONE_STR_LABEL);

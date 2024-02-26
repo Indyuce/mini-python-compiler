@@ -16,17 +16,17 @@ public class RuntimeErr {
         compileThrow(v);
     }
 
-    public static void invalidIndexType(TVisitor v, Type callerType, String callerFunction) {
+    public static void invalidIndexType(TVisitor v) {
         v.x86().movq("$" + ErrorEnum.INVALID_INDEX_TYPE.lbl, "%rdi");
-        v.x86().movq("$" + Type.methodNameLabel(callerFunction), "%rsi");
-        v.x86().movq(callerType.classDesc(), "%rdx");
+     //   v.x86().movq(callerType.classDesc(), "%rsi");
+        // TODO
         v.x86().movq("8(%rdx)", "%rdx");
         compileThrow(v);
     }
 
     private static void compileThrow(TVisitor v) {
-        v.x86().call("__print__"); // print error msg
-        v.x86().call("__er__"); // exit program
+        v.x86().call("__printf__"); // print error msg
+        v.x86().call("__err__"); // exit program
     }
 
     enum ErrorEnum {

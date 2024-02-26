@@ -24,7 +24,7 @@ public class int64 extends Type {
         v.x86().string(PRINT_FORMAT_VALUE);
 
         v.x86().dlabel(ZERO_LABEL);
-        v.x86().quad(Type.INT.classDesc());
+        v.x86().quadLabel(Type.INT.classDescLabel());
         v.x86().quad(0);
     }
 

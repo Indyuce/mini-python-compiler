@@ -392,7 +392,7 @@ public class X86_64 {
     }
 
     @Difference
-    X86_64 quad(String s) {
+    X86_64 quadLabel(String s) {
         return data(".quad " + s);
     }
 

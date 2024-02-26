@@ -796,7 +796,12 @@ interface TVisitor {
      * - Puts address of new value in %rax
      */
     @Difference
-    void newValue(Type type, int bytes);
+    void newValue(Type type, String bytes);
+
+    @Difference
+    default void newValue(Type type, int bytes) {
+        newValue(type, "$" + bytes);
+    }
 
     @Difference
     void selfCall(int offset);

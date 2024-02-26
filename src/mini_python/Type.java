@@ -29,11 +29,11 @@ public abstract class Type {
     }
 
     public String classDesc() {
-        return classDescLabel(true);
+        return "$" + classDescLabel();
     }
 
-    public String classDescLabel(boolean dollar) {
-        return (dollar ? "$" : "") + "__class__" + name();
+    public String classDescLabel() {
+        return "__class__" + name() + "__";
     }
 
     public abstract void staticConstants(TVisitor v);
@@ -92,20 +92,13 @@ public abstract class Type {
     public static int getOffset(String functionName) {
 
         for (int c = 0; c < METHODS.size(); c++)
-            if (METHODS.get(c).getName().equals(functionName)) return 8 * c;
+            if (METHODS.get(c).getName().equals(functionName)) return 8 * (c + 1);
 
         throw new CompileError("could not find offset of function '" + functionName + "'");
     }
 
     public static int getOffset(Enum element) {
-        int c = 1;
-        for (Method method : METHODS) {
-            if (method.getName().substring(2, method.getName().length() - 2).equals(element.name().toLowerCase().substring(1)))
-                return 8 * c;
-            c++;
-        }
-
-        throw new CompileError("could not find method corresponding to operator " + element.name());
+        return getOffset("__" + element.name().toLowerCase().substring(1) + "__");
     }
 
     private static final List<Method> METHODS = findMethods();
@@ -130,10 +123,10 @@ public abstract class Type {
         v.x86().string(name());
 
         // Compile type descriptor in .data
-        v.x86().dlabel(classDescLabel(false));
-        v.x86().quad("$" + classNameLabel()); // address of class name string
+        v.x86().dlabel(classDescLabel());
+        v.x86().quadLabel(classNameLabel()); // address of class name string
         for (Method function : METHODS)
-            v.x86().quad("$" + asmId(this, function));
+            v.x86().quadLabel(asmId(this, function));
     }
 
     public static String methodNameLabel(String functionName) {
@@ -148,14 +141,14 @@ public abstract class Type {
                 final Method method = this.getClass().getDeclaredMethod(parent.getName(), TVisitor.class);
                 if (method.isAnnotationPresent(Delegated.class)) continue; // Method delegated to other type
 
+                // Label method in .text
+                v.x86().label(asmId(this, method));
+
                 // Method not defined, compile error throwing
                 if (method.isAnnotationPresent(Undefined.class)) {
                     RuntimeErr.methodNotDefined(v, this, method.getName());
                     continue;
                 }
-
-                // Label method in .text
-                v.x86().label(asmId(this, method));
 
                 // Write method
                 method.invoke(this, v);

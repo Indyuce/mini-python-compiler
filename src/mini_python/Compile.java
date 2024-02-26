@@ -100,7 +100,7 @@ class TVisitorImpl implements TVisitor {
     }
 
     @Override
-    public void newValue(Type type, int bytes) {
+    public void newValue(Type type, String bytes) {
         x86.movq(bytes, "%rdi");
         x86.call("__malloc__");
         x86.movq(type.classDesc(), "0(%rax)");
@@ -206,7 +206,7 @@ class TVisitorImpl implements TVisitor {
     public void visit(Cstring c) {
         final String label = newDataLabel();
         x86.dlabel(label);
-        x86.quad(Type.STRING.classDesc());
+        x86.quadLabel(Type.STRING.classDescLabel());
         x86.quad(c.s.length());
         x86.string(c.s);
         x86.movq("$" + label, "%rax");
@@ -216,7 +216,7 @@ class TVisitorImpl implements TVisitor {
     public void visit(Cint c) {
         final String label = newDataLabel();
         x86.dlabel(label);
-        x86.quad(Type.INT.classDesc());
+        x86.quadLabel(Type.INT.classDescLabel());
         x86.quad(c.i);
         x86.movq("$" + label, "%rax");
     }
