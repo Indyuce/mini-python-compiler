@@ -53,3 +53,4 @@ d'utiliser ce registre car il contient l'addresse du type descriptor array.
 - Mettre l'addresse des TD directement dans les valeurs au lieu de mettre un int
 - Créer un système qui permet de vérifier formellement qu'il n'y a pas de problèmes d'allocation des registres (genre
   quand on utilise %r10 ça vérifie au compile time qu'il est pas écrasé plus tard et qu'on a pas fait exprès)
+- Tuples python (unchangeable) ou classes

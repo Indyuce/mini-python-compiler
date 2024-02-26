@@ -118,7 +118,7 @@ public class BuiltinFunctions {
         v.x86().movq("8(%rsi)", "%r9");
 
         v.x86().cmpq("%r8", "%r9");
-        v.x86().jl("__comp__le__int__if__");
+        v.x86().jle("__comp__le__int__if__");
         v.x86().movq("$"+ bool.FALSE_LABEL, "%rax");
         v.x86().ret();
 
@@ -136,7 +136,7 @@ public class BuiltinFunctions {
         v.x86().movq("8(%rsi)", "%r9");
 
         v.x86().cmpq("%r8", "%r9");
-        v.x86().jl("__comp__gt__int__if__");
+        v.x86().jg("__comp__gt__int__if__");
         v.x86().movq("$"+ bool.FALSE_LABEL, "%rax");
         v.x86().ret();
 
@@ -154,7 +154,7 @@ public class BuiltinFunctions {
         v.x86().movq("8(%rsi)", "%r9");
 
         v.x86().cmpq("%r8", "%r9");
-        v.x86().jl("__comp__ge__int__if__");
+        v.x86().jge("__comp__ge__int__if__");
         v.x86().movq("$"+ bool.FALSE_LABEL, "%rax");
         v.x86().ret();
 
