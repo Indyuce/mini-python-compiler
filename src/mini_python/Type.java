@@ -31,6 +31,10 @@ public abstract class Type {
         return "__typename__" + name().toLowerCase() + "__";
     }
 
+    public String classDesc() {
+        return "__class__" + name();
+    }
+
     public abstract void staticConstants(TVisitor v);
 
     @Builtin
