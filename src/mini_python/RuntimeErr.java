@@ -39,7 +39,7 @@ public class RuntimeErr {
         final String lbl, message;
 
         ErrorEnum(String message) {
-            this.lbl = "__ermsg__" + name().toLowerCase() + "__";
+            this.lbl = "__errmsg__" + name().toLowerCase() + "__";
             this.message = message;
         }
     }
