@@ -142,12 +142,6 @@ public abstract class Type {
 
     public void compileMethods(TVisitor v) {
 
-        // Write method names as strings
-        for (Method parent : METHODS) {
-            v.x86().dlabel(methodNameLabel(parent.getName()));
-            v.x86().string(parent.getName());
-        }
-
         // Write methods
         for (Method parent : METHODS)
             try {
@@ -183,5 +177,22 @@ public abstract class Type {
         }
 
         return "__" + type.name() + function.getName();
+    }
+
+    public static void registerTypes(TVisitor v) {
+
+        // Register types
+        for (Type type : Compile.TYPES)
+            type.compileInit(v);
+
+        // Compile builtin type methods
+        for (Type type : Compile.TYPES)
+            type.compileMethods(v);
+
+        // Write type method names as strings
+        for (Method parent : METHODS) {
+            v.x86().dlabel(methodNameLabel(parent.getName()));
+            v.x86().string(parent.getName());
+        }
     }
 }

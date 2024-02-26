@@ -26,16 +26,11 @@ public class Compile {
         // Set entry point
         x86.globl(LABEL_MAIN);
 
-        // Register types
-        for (Type type : Compile.TYPES)
-            type.compileInit(visitor);
+        // Register types and their functions
+        Type.registerTypes(visitor);
 
         // Write misc builtins
         writeBuiltins(visitor);
-
-        // Compile builtin type methods
-        for (Type type : Compile.TYPES)
-            type.compileMethods(visitor);
 
         // Compile all user functions
         for (TDef tdef : f.l)
