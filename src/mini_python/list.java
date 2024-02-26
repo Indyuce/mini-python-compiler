@@ -283,7 +283,7 @@ public class list extends Type {
 
         v.x86().label(negLabel);
         v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
-        v.x86().ret();*/
+        v.x86().ret();
     }
 
     @Override
