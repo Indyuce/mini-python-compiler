@@ -408,7 +408,9 @@ public class X86_64 {
             for (LabelAsm lasm : this.text) {
                 if (lasm instanceof Lab) {
                     writer.write(lasm.s + ":\n");
-                } else writer.write(lasm.s);
+                } else if (lasm instanceof Asm) {
+                    writer.write(lasm.s);
+                }
 
             }
             writer.write(this.inline.toString());

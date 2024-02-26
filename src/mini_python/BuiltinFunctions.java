@@ -110,6 +110,60 @@ public class BuiltinFunctions {
     }
 
     @Builtin
+    @Kills(reg = {"%rax", "%r8", "%r9"})
+    public static void __comp__le__int__(TVisitor v) {
+        // Perform %rdi <= %rsi
+        // Return true
+        v.x86().movq("8(%rdi)", "%r8");
+        v.x86().movq("8(%rsi)", "%r9");
+
+        v.x86().cmpq("%r8", "%r9");
+        v.x86().jl("__comp__le__int__if__");
+        v.x86().movq("$"+ bool.FALSE_LABEL, "%rax");
+        v.x86().ret();
+
+        v.x86().label("__comp__le__int__if__");
+        v.x86().movq("$"+ bool.TRUE_LABEL, "%rax");
+        v.x86().ret();
+    }
+
+    @Builtin
+    @Kills(reg = {"%rax", "%r8", "%r9"})
+    public static void __comp__gt__int__(TVisitor v) {
+        // Perform %rdi <= %rsi
+        // Return true
+        v.x86().movq("8(%rdi)", "%r8");
+        v.x86().movq("8(%rsi)", "%r9");
+
+        v.x86().cmpq("%r8", "%r9");
+        v.x86().jl("__comp__gt__int__if__");
+        v.x86().movq("$"+ bool.FALSE_LABEL, "%rax");
+        v.x86().ret();
+
+        v.x86().label("__comp__gt__int__if__");
+        v.x86().movq("$"+ bool.TRUE_LABEL, "%rax");
+        v.x86().ret();
+    }
+
+    @Builtin
+    @Kills(reg = {"%rax", "%r8", "%r9"})
+    public static void __comp__ge__int__(TVisitor v) {
+        // Perform %rdi <= %rsi
+        // Return true
+        v.x86().movq("8(%rdi)", "%r8");
+        v.x86().movq("8(%rsi)", "%r9");
+
+        v.x86().cmpq("%r8", "%r9");
+        v.x86().jl("__comp__ge__int__if__");
+        v.x86().movq("$"+ bool.FALSE_LABEL, "%rax");
+        v.x86().ret();
+
+        v.x86().label("__comp__ge__int__if__");
+        v.x86().movq("$"+ bool.TRUE_LABEL, "%rax");
+        v.x86().ret();
+    }
+
+    @Builtin
     public static void __err__(TVisitor v) {
         v.x86().movq(60, "%rax"); // syscall number
         v.x86().movq(1, "%rdi"); // error code in %rdi
