@@ -27,6 +27,10 @@ public abstract class Type {
 
     public abstract String name();
 
+    public String typeNameLabel() {
+        return "__typename__" + name().toLowerCase() + "__";
+    }
+
     public abstract void staticConstants(TVisitor v);
 
     @Builtin
@@ -89,7 +93,7 @@ public abstract class Type {
     }
 
     public static int getOffset(Enum element) {
-        int c = 0;
+        int c = 1;
         for (Method method : METHODS) {
             if (method.getName().substring(2, method.getName().length() - 2).equals(element.name().toLowerCase().substring(1)))
                 return 8 * c;
@@ -116,21 +120,36 @@ public abstract class Type {
         // Static constants if needed
         staticConstants(v);
 
-        v.malloc(8 * METHODS.size()); // Allocate memory for type descriptor
-        int ofs = 0;
+        // Compile type name in string
+        v.x86().dlabel(typeNameLabel());
+        v.x86().string(name());
+
+        v.malloc(8 * (METHODS.size() + 1)); // Allocate memory for type descriptor
+        v.x86().movq("$" + typeNameLabel(), "%rdi");
+        v.x86().movq("%rdi", "0(%rax)"); // save address of type name string
         for (Method function : METHODS) {
             final String functionId = asmId(this, function);
             v.x86().movq("$" + functionId, "%rdi");
-            v.x86().movq("%rdi", (8 * ofs++) + "(%rax)");
+            v.x86().movq("%rdi", getOffset(function.getName()) + "(%rax)");
         }
 
         // Write address to type descriptor in type descriptor array
         v.x86().movq("%rax", (getOffset() * 8) + "(" + Compile.TDA_REG + ")");
     }
 
+    public static String methodNameLabel(String functionName) {
+        return "__fctnname" + functionName;
+    }
+
     public void compileMethods(TVisitor v) {
         final Type nulled = REGISTERED.put(getOffset(), this);
         if (nulled != null) throw new CompileError("registered type with duplicate id " + getOffset());
+
+        // Write method names as strings
+        for (Method parent : METHODS) {
+            v.x86().dlabel(methodNameLabel(parent.getName()));
+            v.x86().string(parent.getName());
+        }
 
         // Write methods
         for (Method parent : METHODS)
