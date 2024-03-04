@@ -13,14 +13,11 @@ public class RuntimeErr {
     }
 
     public static void methodNotDefined(TVisitor v, Type callerType, String callerFunction) {
-        v.x86().movq("$" + ErrorEnum.TEST.lbl, "%rdi");
-        v.x86().call("__printf__");
-
-      //  v.x86().movq("$" + Type.methodNameLabel(callerFunction), "%rsi"); // address to method name string
-     //   v.x86().movq(callerType.classDesc(), "%rdx");
-      //  v.x86().movq("0(%rdx)", "%rdx"); // address to class name string
-        // rcx given type
-     //   compileThrow(v);
+        v.x86().movq("$" + ErrorEnum.METHOD_NOT_DEFINED.lbl, "%rdi");
+        v.x86().movq("$" + Type.methodNameLabel(callerFunction), "%rsi"); // address to method name string
+        v.x86().movq(callerType.classDesc(), "%rdx");
+        v.x86().movq("0(%rdx)", "%rdx"); // address to class name string
+        compileThrow(v);
     }
 
     public static void invalidArgType(TVisitor v, @Nullable Type callerType, String callerFunction, String paramReg) {
@@ -47,7 +44,8 @@ public class RuntimeErr {
     }
 
     enum ErrorEnum {
-        TEST("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+        @Deprecated
+        TEST("this is a test error message!!!!!!!!!!!!!!!!!!!!!"),
         METHOD_NOT_DEFINED("method '%s' not defined for type '%s'"),
         INVALID_INDEX_TYPE("requires index of type int, given '%s'"),
         INVALID_ARG_TYPE("method '%s' of type '%s' does not accept arg of type '%s'");

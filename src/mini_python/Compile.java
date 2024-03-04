@@ -29,11 +29,9 @@ public class Compile {
         // Register types and their functions
         Type.registerTypes(visitor);
 
-        // Register constants for errors
-        RuntimeErr.registerConstants(visitor);
-
-        // Write misc builtins
-        writeBuiltins(visitor);
+        RuntimeErr.registerConstants(visitor); // Register constants for errors
+        writeBuiltinConstants(visitor); // Write static builtin function constants
+        writeBuiltins(visitor); // Write static builtin functions
 
         // Compile all user functions
         for (TDef tdef : f.l)
@@ -66,6 +64,18 @@ public class Compile {
             } catch (Exception exception) {
                 throw new CompileError(exception);
             }
+    }
+
+    private static void writeBuiltinConstants(TVisitor v) {
+
+        v.x86().dlabel(Type.methodNameLabel("__get__"));
+        v.x86().string("__get__");
+
+        v.x86().dlabel(Type.methodNameLabel("__set__"));
+        v.x86().string("__set__");
+
+        v.x86().dlabel(Type.methodNameLabel("range"));
+        v.x86().string("range");
     }
     //endregion
 }
