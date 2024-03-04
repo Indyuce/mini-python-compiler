@@ -1,6 +1,5 @@
 package mini_python;
 
-import mini_python.annotation.Assembly;
 import mini_python.annotation.Builtin;
 import mini_python.annotation.Kills;
 
@@ -40,11 +39,11 @@ public class BuiltinFunctions {
     }
 
     @Builtin
-    public static void __len__(TVisitor v) {
-        v.x86().dlabel(Type.methodNameLabel("__len__"));
+    public static void len(TVisitor v) {
+        v.x86().dlabel(Type.methodNameLabel("len"));
         v.x86().string("len");
 
-        v.ofType("%rdi", null, "__len__", Type.STRING, Type.LIST);
+        v.ofType("%rdi", null, "len", Type.STRING, Type.LIST);
 
         v.saveRegisters(() -> v.newValue(Type.INT, 16), "%rdi"); // %rax = &[new int]
         v.x86().movq("8(%rdi)", "%r10"); // get length of string/list

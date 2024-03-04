@@ -382,7 +382,7 @@ class TVisitorImpl implements TVisitor {
     public void visit(TElen e) {
         e.e.accept(this); // %rax = &[e]
         x86.movq("%rax", "%rdi");
-        x86.call("__len__"); // %rax = len([e])
+        x86.call("len"); // %rax = len([e])
     }
 
     @Override
@@ -417,7 +417,7 @@ class TVisitorImpl implements TVisitor {
         s.e.accept(this); // %rax = &[e]
         x86.movq("%rax", "%rdi");
         selfCall(Type.getOffset("__print__"));
-        x86.movq("$" + string.LINE_BREAK_LABEL, "%rdi");
+        x86.movq("$" + string.LINE_BREAK_LABEL, "%rdi"); // print line break right after
         x86.call("__printf__");
     }
 
