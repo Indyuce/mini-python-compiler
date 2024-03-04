@@ -1,6 +1,5 @@
 package mini_python;
 
-import mini_python.annotation.Assembly;
 import mini_python.annotation.Builtin;
 import mini_python.annotation.Kills;
 
