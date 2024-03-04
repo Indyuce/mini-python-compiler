@@ -806,6 +806,12 @@ interface TVisitor {
     @Difference
     void selfCall(int offset);
 
+    @Difference
+    String newTextLabel();
+
+    @Difference
+    String newDataLabel();
+
     @NotNull
     @Difference
     @Kills(reg = {"%r10"})

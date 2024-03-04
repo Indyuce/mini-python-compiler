@@ -35,11 +35,10 @@ public class RuntimeErr {
         compileThrow(v);
     }
 
-    public static void invalidIndexType(TVisitor v) {
+    public static void invalidIndexType(TVisitor v, String paramReg) {
         v.x86().movq("$" + ErrorEnum.INVALID_INDEX_TYPE.lbl, "%rdi");
-        //   v.x86().movq(callerType.classDesc(), "%rsi");
-        // TODO
-        v.x86().movq("0(%rdx)", "%rdx");
+        v.x86().movq("(" + paramReg + ")", "%rsi");
+        v.x86().movq("(%rsi)", "%rsi"); // address to param class name string
         compileThrow(v);
     }
 
@@ -49,10 +48,8 @@ public class RuntimeErr {
     }
 
     enum ErrorEnum {
-        @Deprecated
-        TEST("this is a test error message!!!!!!!!!!!!!!!!!!!!!"),
         METHOD_NOT_DEFINED("method '%s' not defined for type '%s'"),
-        INVALID_INDEX_TYPE("requires index of type int, given '%s'"),
+        INVALID_INDEX_TYPE("list index-access requires type int, given '%s'"),
         INVALID_ARG_TYPE("method '%s' of type '%s' does not accept arg of type '%s'"),
         FOR_REQUIRES_LIST("for loop requires a list to iterate through");
 

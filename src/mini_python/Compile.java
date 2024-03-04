@@ -92,11 +92,13 @@ class TVisitorImpl implements TVisitor {
     // Set<Variable> assignedVariables = new HashSet<>();
 
     @NotNull
-    private String newDataLabel() {
+    @Override
+    public String newDataLabel() {
         return "DL" + dataLabelCounter++;
     }
 
     @NotNull
+    @Override
     public String newTextLabel() {
         return "TL" + textLabelCounter++;
     }
@@ -182,7 +184,6 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TDef tdef) {
-        // TODO
         x86.label(tdef.f.name); // Add def label
 
         int i;
@@ -315,7 +316,6 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TEunop e) {
-        // TODO
         e.e.accept(this); // %rax = &[e1]
         x86.movq("%rax", "%rdi");
         selfCall(Type.getOffset(e.op));
@@ -348,7 +348,7 @@ class TVisitorImpl implements TVisitor {
 
         saveRegisters(() -> {
             e.e2.accept(this);
-            ofType("%rax", Type.LIST, "__get__", Type.INT);
+            ofType("%rax", () -> RuntimeErr.invalidIndexType(this, "%rax"), Type.LIST);
             x86.movq("8(%rax)", "%rsi"); // %rsi = int value
         }, "%rax");
 
@@ -453,7 +453,7 @@ class TVisitorImpl implements TVisitor {
 
         saveRegisters(() -> {
             s.e2.accept(this);
-            ofType("%rax", null, "__set__", Type.INT);
+            ofType("%rax", () -> RuntimeErr.invalidIndexType(this, "%rax"), Type.LIST);
             x86.movq("8(%rax)", "%rcx"); // %rcx = [int]
             saveRegisters(() -> {
                 s.e3.accept(this);

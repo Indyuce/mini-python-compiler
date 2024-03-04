@@ -4,7 +4,6 @@ public class Location {
     final int line;
     final int column;
 
-    // TODO shouldn't be used, check usage
     @Deprecated
     public static final Location START = new Location(0, 0);
 
