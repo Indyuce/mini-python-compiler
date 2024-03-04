@@ -155,6 +155,25 @@ public class BuiltinFunctions {
     }
 
     @Builtin
+    @Kills(reg = {"%rax", "%r8", "%r9"})
+    public static void __lt__(TVisitor v) {
+
+    }
+
+    @Builtin
+    @Kills(reg = {"%rax", "%r8", "%r9"})
+    public static void __le__(TVisitor v) {
+
+    }
+
+    @Builtin
+    @Kills(reg = {"%rax", "%r8", "%r9"})
+    public static void __gt__(TVisitor v) {
+
+    }
+
+
+    @Builtin
     public static void __err__(TVisitor v) {
         v.x86().movq(60, "%rax"); // syscall number
         v.x86().movq(1, "%rdi"); // error code in %rdi

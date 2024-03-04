@@ -37,6 +37,38 @@ public class bool extends Type {
         v.x86().string(FALSE_PRINT_FORMAT_VALUE);
     }
 
+    /**
+     * %rdi = 1st arg, object caller
+     * %rsi = 2nd arg
+     *
+     * @param v         Visitor I guess
+     * @param operation Code corresponding to arithmetic operation where
+     *                  [e1] is in %rdi and [e2] is in %rsi. Boolean result
+     *                  of comparison/equality check must be placed in %cl
+     */
+    private void comp(TVisitor v, Runnable operation) {
+        v.saveRegisters(() -> {
+            v.x86().movq("%rsi", "%rdi");
+            v.selfCall(Type.getOffset("__bool__")); // %rax = &int([e2])
+            v.x86().movq("8(%rax)", "%rsi"); // %rsi = int([e2])
+        }, "%rdi");
+        v.x86().movq("8(%rdi)", "%rdi"); // %rdi = [e1]
+
+        operation.run();
+        v.x86().movzbq("%cl", "%r10");
+
+        v.saveRegisters(() -> v.newValue(Type.BOOL, 16), "%r10");
+        v.x86().movq("%r10", "8(%rax)"); // put value at %rax+8
+        v.x86().ret();
+    }
+
+    // Future intention of this function : to_bool (or bool(...))
+    @Override
+    public void __bool__(TVisitor v) {
+        v.x86().movq("%rdi", "%rax");
+        v.x86().ret();
+    }
+
     @Override
     @Undefined
     public void __add__(TVisitor v) {
@@ -118,12 +150,6 @@ public class bool extends Type {
         v.x86().movzbq("%cl", "%r10");
         v.x86().movq("%r10", "8(%rax)");
 
-        v.x86().ret();
-    }
-
-    @Override
-    public void __bool__(TVisitor v) {
-        v.x86().movq("%rdi", "%rax");
         v.x86().ret();
     }
 
