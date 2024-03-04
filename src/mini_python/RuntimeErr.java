@@ -20,6 +20,11 @@ public class RuntimeErr {
         compileThrow(v);
     }
 
+    public static void forRequiresList(TVisitor v) {
+        v.x86().movq("$" + ErrorEnum.FOR_REQUIRES_LIST.lbl, "%rdi");
+        compileThrow(v);
+    }
+
     public static void invalidArgType(TVisitor v, @Nullable Type callerType, String callerFunction, String paramReg) {
         v.x86().movq("(" + paramReg + ")", "%rcx");
         v.x86().movq("(%rcx)", "%rcx"); // address to param class name string
@@ -48,7 +53,8 @@ public class RuntimeErr {
         TEST("this is a test error message!!!!!!!!!!!!!!!!!!!!!"),
         METHOD_NOT_DEFINED("method '%s' not defined for type '%s'"),
         INVALID_INDEX_TYPE("requires index of type int, given '%s'"),
-        INVALID_ARG_TYPE("method '%s' of type '%s' does not accept arg of type '%s'");
+        INVALID_ARG_TYPE("method '%s' of type '%s' does not accept arg of type '%s'"),
+        FOR_REQUIRES_LIST("for loop requires a list to iterate through");
 
         final String lbl, message;
 

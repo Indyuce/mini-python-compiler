@@ -65,7 +65,7 @@ public class list extends Type {
         v.x86().ret();
     }
 
-    private void iter(TVisitor v, @Nullable String listReg, String label, Runnable code) {
+    public static void iter(TVisitor v, @Nullable String listReg, String label, Runnable code) {
         iter(v, listReg, label, "%rcx", "%rdx", code);
     }
 
@@ -79,7 +79,7 @@ public class list extends Type {
      *                %rcx = increasing pointer
      *                %rdx = end pointer
      */
-    private void iter(TVisitor v, @Nullable String listReg, String label, String counterReg, String destReg, Runnable code) {
+    public static void iter(TVisitor v, @Nullable String listReg, String label, String counterReg, String destReg, Runnable code) {
         final String loopLabel = "__list__" + label + "__loop__";
         final String endLabel = "__list__" + label + "__end__";
 

@@ -5,9 +5,7 @@ import mini_python.annotation.Kills;
 import mini_python.annotation.NotNull;
 import mini_python.annotation.Nullable;
 import mini_python.exception.CompileError;
-import mini_python.exception.NotImplementedError;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -98,12 +96,12 @@ class TVisitorImpl implements TVisitor {
 
     @NotNull
     private String newDataLabel() {
-        return "c_" + dataLabelCounter++;
+        return "DL" + dataLabelCounter++;
     }
 
     @NotNull
     public String newTextLabel() {
-        return "t_" + textLabelCounter++;
+        return "TL" + textLabelCounter++;
     }
 
     @Override
@@ -459,8 +457,13 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TSfor s) {
-        // TODO
-        throw new NotImplementedError();
+        s.e.accept(this);
+        ofType("%rax", () -> RuntimeErr.forRequiresList(this), Type.LIST);
+        saveRegisters(() -> list.iter(this, "%rax", newTextLabel(), "%r12", "%r13", () -> {
+            x86.movq("(%r12)", "%r10");
+            x86.movq("%r10", s.x.ofs + "(%rbp)"); // load value of list at given index into variable
+            s.s.accept(this);
+        }), "%r12", "%r13");
     }
 
     @Override
