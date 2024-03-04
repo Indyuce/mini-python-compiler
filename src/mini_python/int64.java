@@ -105,9 +105,11 @@ public class int64 extends Type {
     }
 
     @Override
+    @Kills(reg = {"%rax", "%rdx", "%rsi"})
     public void __mod__(TVisitor v) {
         binop(v, () -> {
             v.x86().movq("%rdi", "%rax");
+            v.x86().cqto(); // Extends rax to signed 128 rdx:rax, therefore rdx is modified.
             v.x86().idivq("%rsi");
             v.x86().movq("%rdx", "%rdi"); // remainder is placed in %rdx
         });

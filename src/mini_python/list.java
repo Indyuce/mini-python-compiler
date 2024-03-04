@@ -218,6 +218,22 @@ public class list extends Type {
      * @param equal If it's <= (resp =>) or not.
      */
     private void comp(TVisitor v, String functionName, boolean lower, boolean equal) {
+        /*
+
+        Two cases : should equal be true (<= or >=) :
+
+        We keep comparing element by element. If (comparison and not equal), early stop on result! Else, continue comparing next elements.
+        If went through all the elements without returning, of the smallest list: compare len(list_first) to len(list_second)
+        - Equal : return true
+        - Not equal : return depends on lower.
+
+        Should equal be false (< or >):
+
+        I only need to test the first element!
+        Should one of the lists be empty, compare the lengths.
+        Should the two lists be NOT empty, compare just the first elements.
+
+         */
         final String negLabel = "__list__" + functionName + "__neg__";
         final String ctnLabel = "__list__" + functionName + "__ctn__";
         final String brkLabel = "__list__" + functionName + "__brk__";
@@ -230,60 +246,142 @@ public class list extends Type {
         v.x86().cmpq(Type.LIST.classDesc(), "%r10"); // check type
         v.x86().jne(__EQ__NEG__);
 
-        // get list of minimum length
 
         // Switch list 1 and 2 such that list 1 is the shorter one, list 2 is the longer one
         {
             String label_name = "__min__"+functionName+"__2__";
+            String label_name_fin = "__min__"+functionName+"__fin__";
             v.x86().movq("8(%rsi)", "%rcx");
             v.x86().cmpq("%rcx", "8(%rdi)");
             v.x86().js(label_name);
             v.x86().movq("%rsi", "%rax");
             v.x86().movq("%rdi", "%rcx");
+            v.x86().jmp(label_name_fin);
             v.x86().label(label_name); // len(l1) < len(l2)
             v.x86().movq("%rdi", "%rax");
             v.x86().movq("%rsi", "%rcx");
+            v.x86().label(label_name_fin);
         }
 
-        // First list : %rax (lowest)
-        // Second list : %rcx (highest)
+        // %rax (lowest)
+        // %rcx (highest)
+        // %rdi (first)
+        // %rsi (second)
+        // Meaning 2 variables pointing at the same lists
 
-        v.saveRegisters(() -> {
-            v.x86().leaq("16(%rcx)", "%r13"); // pointer within HLL
-            v.x86().movq("$" + bool.TRUE_LABEL, "%rbx"); // true by default TODO
+        if (equal) {
 
-            // %r12 = pointer within LLL
-            // %r13 = pointer within HLL
-            // %r14 = max value of pointer %r12
-            // %rbx = if lists are equal
-            iter(v, "%rax", "cmp_"+functionName+"_", "%r12", "%r14", () -> {
-                v.x86().movq("(%r12)", "%rdi"); // 1st arg (from caller parser)
-                v.x86().movq("(%r13)", "%rsi"); // 2nd arg
-                v.selfCall(Type.getOffset(compFunction));
-                // TODO - If different types, throw runtime error, inside each comp Func
+            v.saveRegisters(() -> {
+                v.x86().leaq("16(%rcx)", "%r13"); // pointer within HLL
+                v.x86().movq("$" + bool.TRUE_LABEL, "%rbx"); // true by default TODO
 
-                v.x86().cmpq(1, "8(%rax)");
+                // %r12 = pointer within LLL
+                // %r13 = pointer within HLL
+                // %r14 = max value of pointer %r12
+                // %rbx = if lists are equal
 
-                v.x86().label("__list__cmp_"+functionName+"__typeif_");
+                iter(v, "%rax", "cmp_" + functionName + "_", "%r12", "%r14", () -> {
+                    v.x86().movq("(%r12)", "%rdi"); // 1st arg (from caller parser)
+                    v.x86().movq("(%r13)", "%rsi"); // 2nd arg
+                    v.selfCall(Type.getOffset(compFunction));
 
-                v.x86().je(ctnLabel);
+                    v.x86().cmpq(1, "8(%rax)");
+
+                    v.x86().label("__list__cmp_" + functionName + "__typeif_");
+
+                    v.x86().je(ctnLabel);
+                    v.x86().movq("$" + bool.FALSE_LABEL, "%rbx");
+                    v.x86().jmp(brkLabel); // break out of loop
+
+                    v.x86().label(ctnLabel);
+                    v.x86().addq("$8", "%r13"); // increment list_2 pointer
+                });
+
+                String sadBrkLabel = "__list__" + functionName + "__falseret_brk__";
+
+                // The loop is finished, meaning smallest is fully parcoured, but no result : compare lengths
+                v.x86().cmpq("8(%rdi)", "%r10");
+                v.x86().cmpq("%r10", "8(%rsi)");
+
+                switch (functionName) {
+                    case "le":
+                        // True already in rbx
+                        v.x86().jg(sadBrkLabel);
+                        v.x86().jmp(brkLabel);
+                        break;
+                    case "ge":
+                        // Same comment
+                        v.x86().jl(sadBrkLabel);
+                        v.x86().jmp(brkLabel);
+                        break;
+                    default:
+                        v.x86().jmp(brkLabel);
+                }
+
+
+                v.x86().label(sadBrkLabel);
                 v.x86().movq("$" + bool.FALSE_LABEL, "%rbx");
-                v.x86().jmp(brkLabel); // break out of loop
 
-                v.x86().label(ctnLabel);
+                v.x86().label(brkLabel);
+                v.x86().movq("%rbx", "%rax");
+            }, "%rbx", "%r12", "%r13", "%r14", "%rdx");
 
-                v.x86().addq("$8", "%r13"); // increment list_2 pointer
-            });
+            v.x86().ret(); // return, %rax already populated. TODO
 
-            v.x86().label(brkLabel);
-            v.x86().movq("%rbx", "%rax");
-        }, "%rbx", "%r12", "%r13", "%r14", "%rdx");
+            v.x86().label(negLabel);
+            v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
+            v.x86().ret();
+        } else {
 
-        v.x86().ret(); // return, %rax already populated. TODO
+            String non_empty_lists_label = "__non_empty_strict__"+functionName+"__";
+            String compare_gives_true = "__result__"+functionName+"_true_";
+            String compare_gives_false = "__result__"+functionName+"_false_";
 
-        v.x86().label(negLabel);
-        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
-        v.x86().ret();
+            v.x86().cmpq(0, "8(%rax)");
+            v.x86().jne(non_empty_lists_label);
+
+            v.x86().cmpq("8(%rdi)", "%r10");
+            v.x86().cmpq("%r10", "8(%rsi)");
+
+            // Unfortunately this is hard coded because we use an quad int representation for the length of the list
+            // (Not an object that is apart)
+            switch (functionName) {
+                case "lt":
+                    v.x86().jl(compare_gives_true);
+                    v.x86().jmp(compare_gives_false);
+                    break;
+                case "gt":
+                    v.x86().jb(compare_gives_true);
+                    v.x86().jmp(compare_gives_false);
+                    break;
+                default:
+                    v.x86().jmp(compare_gives_false);
+            }
+
+            // If both are longer than 1 element : compare first elements of each list
+            v.x86().label(non_empty_lists_label);
+            v.x86().movq("16(%rdi)", "%rdi"); // 1st arg (from caller parser)
+            v.x86().movq("16(%rsi)", "%rsi"); // 2nd arg
+
+            // Call the associated function
+            v.selfCall(Type.getOffset(compFunction));
+
+            // If comparison successful : return the correct value
+            v.x86().cmpq(1, "8(%rax)");
+            v.x86().je(compare_gives_true);
+            v.x86().jmp(compare_gives_false);
+
+
+            // return true label
+            v.x86().label(compare_gives_true);
+            v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
+            v.x86().ret();
+
+            // return false label
+            v.x86().label(compare_gives_false);
+            v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
+            v.x86().ret();
+        }
     }
 
     @Override
