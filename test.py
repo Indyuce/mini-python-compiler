@@ -1,2 +1,6 @@
-print("hello, world!")
-print(10 + [])
+def test():
+    a = 5
+    print(a)
+b = 6
+test()
+print(b)

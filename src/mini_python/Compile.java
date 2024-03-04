@@ -7,6 +7,7 @@ import mini_python.annotation.Nullable;
 import mini_python.exception.CompileError;
 import mini_python.exception.NotImplementedError;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -63,6 +64,7 @@ public class Compile {
                 // Finally register builtin
                 v.x86().label(function.getName());
                 function.invoke(null, v);
+
             } catch (Exception exception) {
                 throw new CompileError(exception);
             }
@@ -162,6 +164,17 @@ class TVisitorImpl implements TVisitor {
         }, "%rbp");
     }
 
+    // Same as stackAligned, but returns
+    public void stackAlignedReturn(Runnable code) {
+        saveRegisters(() -> {
+            x86.movq("%rsp", "%rbp");
+            x86.andq("$-16", "%rsp");
+            code.run();
+            x86.movq("%rbp", "%rsp");
+        }, "%rbp");
+        x86.ret();
+    }
+
     @Override
     public void visit(TDef tdef) {
         // TODO
@@ -174,8 +187,22 @@ class TVisitorImpl implements TVisitor {
 
             if (!tdef.f.local.isEmpty()) { // Make space for local variables
                 final int bytes = tdef.f.local.size() * 8;
-                x86.addq("$" + bytes, "%rsp");
+                x86.subq("$" + bytes, "%rsp");
             }
+
+            i = 0;
+            for (Variable var : tdef.f.params) // Set offset of parameters
+                var.ofs = 16 + 8 * i++;
+        } else {
+
+            int total_nums_of_bytes = 0;
+            if (!tdef.f.local.isEmpty()) { // Make space for local variables
+                final int bytes = tdef.f.local.size() * 8;
+                total_nums_of_bytes += bytes;
+            }
+            x86.pushq("%rbp"); // Save base pointer
+            x86.movq("%rsp", "%rbp"); // Set current base pointer
+            x86.subq("$" + total_nums_of_bytes, "%rsp");
 
             i = 0;
             for (Variable var : tdef.f.params) // Set offset of parameters
@@ -190,6 +217,8 @@ class TVisitorImpl implements TVisitor {
 
         if (tdef.f.name.equals(Compile.LABEL_MAIN)) { // If main, return code 0
             x86.xorq("%rax", "%rax");
+            x86.movq("%rbp", "%rsp");
+            x86.popq("%rbp");
             x86.ret();
         } else visit(new TSreturn(new TEcst(new Cnone()))); // safe return if none
     }

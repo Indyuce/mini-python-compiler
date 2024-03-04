@@ -201,6 +201,8 @@ public class int64 extends Type {
         throw new FunctionDelegatedError();
     }
 
+
+    // Transforms int to int (intention : for this to be a to_int() or a .int()
     @Override
     public void __int__(TVisitor v) {
         v.x86().movq("%rdi", "%rax");
