@@ -1,6 +1,7 @@
 package mini_python;
 
 import mini_python.annotation.Delegated;
+import mini_python.annotation.Kills;
 import mini_python.exception.FunctionDelegatedError;
 
 /**
@@ -93,9 +94,11 @@ public class int64 extends Type {
     }
 
     @Override
+    @Kills(reg = {"%rax", "%rdx", "%rsi"})
     public void __div__(TVisitor v) {
         binop(v, () -> {
             v.x86().movq("%rdi", "%rax"); // dividend goes in %rax
+            v.x86().cqto(); // Extends rax to signed 128 rdx:rax, therefore rdx is modified.
             v.x86().idivq("%rsi"); // divider goes in %rsi
             v.x86().movq("%rax", "%rdi"); // quotient is placed in %rax
         });
