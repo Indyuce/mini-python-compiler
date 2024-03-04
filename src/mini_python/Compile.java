@@ -417,8 +417,15 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TSif s) {
-        // TODO
-        throw new NotImplementedError();
+        final String neg = newTextLabel(), nxt = newTextLabel();
+        s.e.accept(this); // %rax = &[bool]
+        x86.cmpb(0, "8(%rax)");
+        x86.je(neg);
+        s.s1.accept(this); // positive statement
+        x86.jmp(nxt);
+        x86.label(neg); // negative statement
+        s.s2.accept(this);
+        x86.label(nxt);
     }
 
     @Override
@@ -431,9 +438,7 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TSassign s) {
-        // TODO
         s.e.accept(this); // %rax = &[e]
-
         x86.movq("%rax", s.x.ofs + "(%rbp)");
     }
 
