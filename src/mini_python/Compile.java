@@ -323,7 +323,6 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TEident e) {
-        // TODO
         final int offset = e.x.ofs;
         if (offset == -1) throw new CompileError("could not identify variable " + e.x.name);
         x86.movq(offset + "(%rbp)", "%rax");
@@ -331,7 +330,6 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TEcall e) {
-        // TODO
         for (int i = 0; i < e.l.size(); i++) {
             final int idx = e.l.size() - 1 - i;
             final TExpr arg = e.l.get(idx);
@@ -447,7 +445,6 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TSset s) {
-        // TODO
         s.e1.accept(this);
         ofType("%rax", Type.LIST, "__set__", Type.LIST); // %rax = &[list]
 
