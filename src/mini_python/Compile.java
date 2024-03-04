@@ -73,9 +73,6 @@ public class Compile {
 
         v.x86().dlabel(Type.methodNameLabel("__set__"));
         v.x86().string("__set__");
-
-        v.x86().dlabel(Type.methodNameLabel("range"));
-        v.x86().string("range");
     }
     //endregion
 }
@@ -378,32 +375,9 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TErange e) {
-        saveRegisters(() -> {
-            e.e.accept(this);
-            ofType("%rax", null, "range", Type.INT);
-            x86.movq("8(%rax)", "%r13"); // %r13 = max counter
-            x86.xorq("%r12", "%r12"); // %r12 = current counter
-
-            x86.leaq("16(, %r13, 8)", "%rdi"); // Allocate memory for list
-            x86.call("__malloc__");
-            x86.movq("%rax", "%r14"); // %r14 = &[list]
-            x86.movq(Type.LIST.classDesc(), "0(%r14)"); // write type identifier
-            x86.movq("%r13", "8(%r14)"); // write length
-
-            final String loop = newTextLabel(), end = newTextLabel();
-            x86.label(loop); // Main loop label
-            x86.cmpq("%r12", "%r13");
-            x86.je(end);
-            newValue(Type.INT, 16); // new value to be written to list
-            x86.movq("%r12", "8(%rax)"); // write value
-            x86.leaq("16(%r14, %r12, 8)", "%r10"); // target address of new value, i LOVE leaq
-            x86.movq("%rax", "(%r10)");
-            x86.incq("%r12");
-            x86.jmp(loop);
-
-            x86.label(end); // End of loop
-            x86.movq("%r14", "%rax");
-        }, "%r12", "%r13", "%r14");
+        e.e.accept(this);
+        x86.movq("%rax", "%rdi");
+        x86.call("range");
     }
 
     @Override
