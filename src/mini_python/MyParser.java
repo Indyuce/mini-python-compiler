@@ -17,9 +17,8 @@ public class MyParser extends parser {
     // Override this method to be silent and throw an exception that
     // contains the error message.
     message = "syntax error\n";
-    if (info instanceof Symbol) {
-      Symbol symbol = (Symbol) info;
-      message = String.format("%d:%d:\nsyntax error (%s)\n",
+    if (info instanceof Symbol symbol) {
+        message = String.format("%d:%d:\nsyntax error (%s)\n",
                                symbol.left+1, symbol.right, showSymbol(symbol.sym));
     }
     throw new Exception(message);

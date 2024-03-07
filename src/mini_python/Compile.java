@@ -40,7 +40,9 @@ public class Compile {
     }
 
     // Labels reserved by the compiler
-    public static final String LABEL_MAIN = "main";
+    public static final String LABEL_MAIN = "main"; // Entry point of the program assembly_wise.
+
+    public static final String FUNCTION_PREFIX = "f_"; // Prefix for every use defined function.
 
     //endregion
 
@@ -184,7 +186,16 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TDef tdef) {
-        x86.label(tdef.f.name); // Add def label
+        System.out.println("[DEBUG] Name of function : " + tdef.f.name);
+
+        if (tdef.f.name.equals(Compile.LABEL_MAIN)) {
+            // All function calls and compilations are prefixed with f_
+            // main being special, it is not.
+            x86.label(Compile.LABEL_MAIN);
+        } else {
+            // the prefix is added per typing. The compiler needs not to know.
+            x86.label(tdef.f.name);
+        }
 
         int i;
         if (!tdef.f.name.equals(Compile.LABEL_MAIN)) {
@@ -330,12 +341,17 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TEcall e) {
+        // There is a special case where e calls __main__
+        // Behavior is undefined in that case.
+
         for (int i = 0; i < e.l.size(); i++) {
             final int idx = e.l.size() - 1 - i;
             final TExpr arg = e.l.get(idx);
             arg.accept(this);
             x86.pushq("%rax"); // push argument on stack
         }
+
+
         x86.call(e.f.name);
     }
 

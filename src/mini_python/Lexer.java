@@ -30,7 +30,7 @@ class Lexer implements java_cup.runtime.Scanner {
    *                  at the beginning of a line
    * l is of the form l = 2*k, k a non negative integer
    */
-  private static final int ZZ_LEXSTATE[] = { 
+  private static final int[] ZZ_LEXSTATE = {
      0, 0
   };
 
@@ -373,7 +373,7 @@ class Lexer implements java_cup.runtime.Scanner {
   private static final int ZZ_PUSHBACK_2BIG = 2;
 
   /* error messages for the codes above */
-  private static final String ZZ_ERROR_MSG[] = {
+  private static final String[] ZZ_ERROR_MSG = {
     "Unknown internal scanner error",
     "Error: could not match input",
     "Error: pushback value was too large"
@@ -418,7 +418,7 @@ class Lexer implements java_cup.runtime.Scanner {
 
   /** this buffer contains the current text to be matched and is
       the source of the yytext() string */
-  private char zzBuffer[] = new char[ZZ_BUFFERSIZE];
+  private char[] zzBuffer = new char[ZZ_BUFFERSIZE];
 
   /** the textposition at the last accepting state */
   private int zzMarkedPos;
@@ -537,7 +537,7 @@ class Lexer implements java_cup.runtime.Scanner {
     /* is the buffer big enough? */
     if (zzCurrentPos >= zzBuffer.length - zzFinalHighSurrogate) {
       /* if not: blow it up */
-      char newBuffer[] = new char[zzBuffer.length*2];
+      char[] newBuffer = new char[zzBuffer.length*2];
       System.arraycopy(zzBuffer, 0, newBuffer, 0, zzBuffer.length);
       zzBuffer = newBuffer;
       zzEndRead += zzFinalHighSurrogate;
@@ -723,7 +723,7 @@ class Lexer implements java_cup.runtime.Scanner {
    * @return      the next token
    * @exception   java.io.IOException  if any I/O-Error occurs
    */
-  public java_cup.runtime.Symbol next_token() throws java.io.IOException, Exception {
+  public java_cup.runtime.Symbol next_token() throws Exception {
     int zzInput;
     int zzAction;
 
@@ -1101,7 +1101,7 @@ class Lexer implements java_cup.runtime.Scanner {
    *
    * This code was contributed by Karl Meissner <meissnersd@yahoo.com>
    */
-  public java_cup.runtime.Symbol debug_next_token() throws java.io.IOException, Exception {
+  public java_cup.runtime.Symbol debug_next_token() throws Exception {
     java_cup.runtime.Symbol s = next_token();
     System.out.println( "line:" + (yyline+1) + " col:" + (yycolumn+1) + " --"+ yytext() + "--" + getTokenName(s.sym) + "--");
     return s;
@@ -1117,7 +1117,7 @@ class Lexer implements java_cup.runtime.Scanner {
    * @param argv   the command line, contains the filenames to run
    *               the scanner on.
    */
-  public static void main(String argv[]) {
+  public static void main(String[] argv) {
     if (argv.length == 0) {
       System.out.println("Usage : java Lexer [ --encoding <name> ] <inputfile(s)>");
     }

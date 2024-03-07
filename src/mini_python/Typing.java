@@ -14,9 +14,9 @@ import java.util.List;
  * @see #file(File)
  */
 class Typing {
+    public static final String USER_DEFINED_FUNCTION_PREFIX = "f_"; // To be appended to all user defined functions names
+    private static final List<String> RESERVED_FUNCTION_NAMES = Arrays.asList("list", "len", "range", "print");
     static boolean debug = false;
-
-    private static final List<String> RESERVED_FUNCTION_NAMES = Arrays.asList(Compile.LABEL_MAIN, "list", "len", "range", "print");
 
     static TFile file(File f) {
 
@@ -33,7 +33,7 @@ class Typing {
                 throw new TypeError(def.f.loc, "tried defining function with reserved identifier '" + def.f.id + "'");
 
             // Define new typed function
-            final Function defFunction = new Function(def.f.loc, def.f.id);
+            final Function defFunction = new Function(def.f.loc, USER_DEFINED_FUNCTION_PREFIX + def.f.id);
 
             // Pairwise distinct function identifiers
             for (TDef sofar : tf.l)
@@ -169,16 +169,21 @@ class VisitorImpl implements Visitor {
     }
 
     /**
-     * Finds function definition from ident in given scope.
+     * Finds function definition from ident in given scope, user defined.
+     * Predefined are not considered in score and are separately treated.
      */
-    private Function matchFunction(Ident ident) {
+    private Function matchUserDefinedFunction(Ident ident) {
 
-        // Check function scope (allow recursive call)
-        if (functionScope != null && functionScope.name.equals(ident.id)) return functionScope;
+        // Recover name of function. Predefined functions are checked elsewhere
+
+        String name_to_find = Typing.USER_DEFINED_FUNCTION_PREFIX + ident.id;
+
+        // Check function scope (allows recursive call)
+        if (functionScope != null && functionScope.name.equals(name_to_find)) return functionScope;
 
         // Check methods defined so far
         for (TDef tdef : tf.l)
-            if (tdef.f.name.equals(ident.id)) return tdef.f;
+            if (tdef.f.name.equals(name_to_find)) return tdef.f;
 
         // Throw type error
         throw new TypeError(ident.loc, "could not match function to identifier '" + ident + "'");
@@ -192,12 +197,11 @@ class VisitorImpl implements Visitor {
             case "range":
                 throw new TypeError(e.f.loc, "range(n) can only be used inside of list(.)");
 
-                // Implementation of list(range(.))
+            // Implementation of list(range(.))
             case "list":
                 if (e.l.size() != 1) throw new TypeError(e.f.loc, "list(.) takes 1 argument but got " + e.l.size());
                 final Expr expr = e.l.get(0);
-                if (!(expr instanceof Ecall)) throw new TypeError(e.f.loc, "list(.) takes a range as argument");
-                final Ecall call = (Ecall) expr;
+                if (!(expr instanceof Ecall call)) throw new TypeError(e.f.loc, "list(.) takes a range as argument");
                 if (!call.f.id.equals("range")) throw new TypeError(call.f.loc, "list(.) takes a range as argument");
                 if (call.l.size() != 1)
                     throw new TypeError(call.f.loc, "range(.) takes 1 argument but got " + call.l.size());
@@ -212,7 +216,7 @@ class VisitorImpl implements Visitor {
 
             // Normal function call
             default:
-                final Function func = matchFunction(e.f);
+                final Function func = matchUserDefinedFunction(e.f);
 
                 // Check arity
                 if (e.l.size() != func.params.size())

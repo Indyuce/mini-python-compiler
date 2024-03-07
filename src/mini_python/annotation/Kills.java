@@ -7,5 +7,5 @@ package mini_python.annotation;
  * before the call and pop them afterward.
  */
 public @interface Kills {
-    public String[] reg();
+    String[] reg();
 }

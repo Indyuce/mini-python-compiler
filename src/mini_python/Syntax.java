@@ -484,6 +484,11 @@ class Function {
     @Difference
     final LinkedList<Variable> local = new LinkedList<>();
 
+    /**
+     * Constructor for class Function
+     * @param loc Location
+     * @param name Name of the function
+     */
     Function(Location loc, String name) {
         this.name = name;
     }
