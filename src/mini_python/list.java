@@ -281,9 +281,11 @@ public class list extends Type {
                 // %rbx = if lists are equal
 
                 iter(v, "%rax", "cmp_" + functionName + "_", "%r12", "%r14", () -> {
-                    v.x86().movq("(%r12)", "%rdi"); // 1st arg (from caller parser)
-                    v.x86().movq("(%r13)", "%rsi"); // 2nd arg
-                    v.selfCall(Type.getOffset(compFunction));
+                    v.saveRegisters(() -> {
+                        v.x86().movq("(%r12)", "%rdi"); // 1st arg (from caller parser)
+                        v.x86().movq("(%r13)", "%rsi"); // 2nd arg
+                        v.selfCall(Type.getOffset(compFunction));
+                    }, "%rsi", "%rdi");
 
                     v.x86().cmpq(1, "8(%rax)");
 
@@ -299,19 +301,19 @@ public class list extends Type {
 
                 String sadBrkLabel = "__list__" + functionName + "__falseret_brk__";
 
-                // The loop is finished, meaning smallest is fully parcoured, but no result : compare lengths
-                v.x86().cmpq("8(%rdi)", "%r10");
+                // The loop is finished, meaning smallest is fully parsed, but no result : compare lengths
+                v.x86().movq("8(%rdi)", "%r10");
                 v.x86().cmpq("%r10", "8(%rsi)");
 
                 switch (functionName) {
                     case "le":
                         // True already in rbx
-                        v.x86().jg(sadBrkLabel);
+                        v.x86().jl(sadBrkLabel);
                         v.x86().jmp(brkLabel);
                         break;
                     case "ge":
                         // Same comment
-                        v.x86().jl(sadBrkLabel);
+                        v.x86().jg(sadBrkLabel);
                         v.x86().jmp(brkLabel);
                         break;
                     default:
@@ -340,10 +342,10 @@ public class list extends Type {
             v.x86().cmpq(0, "8(%rax)");
             v.x86().jne(non_empty_lists_label);
 
-            v.x86().cmpq("8(%rdi)", "%r10");
+            v.x86().movq("8(%rdi)", "%r10");
             v.x86().cmpq("%r10", "8(%rsi)");
 
-            // Unfortunately this is hard coded because we use an quad int representation for the length of the list
+            // Unfortunately this is hard coded because we use a quad int representation for the length of the list
             // (Not an object that is apart)
             switch (functionName) {
                 case "lt":
