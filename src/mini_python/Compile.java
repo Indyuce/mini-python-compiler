@@ -466,7 +466,7 @@ class TVisitorImpl implements TVisitor {
 
         saveRegisters(() -> {
             s.e2.accept(this);
-            //ofType("%rax", () -> RuntimeErr.invalidIndexType(this, "%rax"), Type.LIST);
+            // ofType("%rax", () -> RuntimeErr.invalidIndexType(this, "%rax"), Type.LIST);
             // The above does not make sense : we can affect both integers and lists
             x86.movq("8(%rax)", "%rcx"); // %rcx = [int]
             saveRegisters(() -> {
