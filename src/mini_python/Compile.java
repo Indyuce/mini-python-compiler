@@ -186,7 +186,6 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TDef tdef) {
-        System.out.println("[DEBUG] Name of function : " + tdef.f.name);
 
         if (tdef.f.name.equals(Compile.LABEL_MAIN)) {
             // All function calls and compilations are prefixed with f_
@@ -357,12 +356,13 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TEget e) {
+        System.out.println(e);
         e.e1.accept(this);
         ofType("%rax", Type.LIST, "__get__", Type.LIST); // %rax = &[list]
 
         saveRegisters(() -> {
             e.e2.accept(this);
-            ofType("%rax", () -> RuntimeErr.invalidIndexType(this, "%rax"), Type.LIST);
+            ofType("%rax", () -> RuntimeErr.invalidIndexType(this, "%rax"), Type.INT);
             x86.movq("8(%rax)", "%rsi"); // %rsi = int value
         }, "%rax");
 
@@ -466,7 +466,8 @@ class TVisitorImpl implements TVisitor {
 
         saveRegisters(() -> {
             s.e2.accept(this);
-            ofType("%rax", () -> RuntimeErr.invalidIndexType(this, "%rax"), Type.LIST);
+            //ofType("%rax", () -> RuntimeErr.invalidIndexType(this, "%rax"), Type.LIST);
+            // The above does not make sense : we can affect both integers and lists
             x86.movq("8(%rax)", "%rcx"); // %rcx = [int]
             saveRegisters(() -> {
                 s.e3.accept(this);

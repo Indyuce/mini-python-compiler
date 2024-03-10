@@ -571,6 +571,11 @@ class TEget extends TExpr {
     void accept(TVisitor v) {
         v.visit(this);
     }
+
+    @Override
+    public String toString() {
+        return "TEget<"+e1.toString()+","+e2.toString()+">";
+    }
 }
 
 class TEcall extends TExpr {
