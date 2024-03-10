@@ -5,4 +5,5 @@ bin/
 *.out
 *.sctest/
 test.s
-.kate*
+*.kate*
+test2*
