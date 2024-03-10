@@ -349,11 +349,11 @@ public class list extends Type {
             // (Not an object that is apart)
             switch (functionName) {
                 case "lt":
-                    v.x86().jl(compare_gives_true);
+                    v.x86().jg(compare_gives_true);
                     v.x86().jmp(compare_gives_false);
                     break;
                 case "gt":
-                    v.x86().jb(compare_gives_true);
+                    v.x86().jl(compare_gives_true);
                     v.x86().jmp(compare_gives_false);
                     break;
                 default:
