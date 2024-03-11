@@ -1,7 +1,6 @@
 package mini_python;
 
 import mini_python.annotation.Builtin;
-import mini_python.annotation.Kills;
 
 public class BuiltinFunctions {
 
@@ -52,111 +51,6 @@ public class BuiltinFunctions {
         v.x86().ret();
     }
 
-    /**
-     * %rdi <= &[list1]
-     * %rsi <= &[list2]
-     * %rax => &[list] with the lowest length
-     * %rcx => &[list] with the highest length
-     * %rdx => &bool(len(l1) < len(l2))
-     */
-    @Builtin
-    @Kills(reg = {"%rax", "%rcx", "%rdx"})
-    public static void __comp__length__list__(TVisitor v) {
-        v.x86().movq("8(%rsi)", "%rcx");
-        v.x86().cmpq("%rcx", "8(%rdi)");
-        v.x86().js("__min__2__");
-        v.x86().movq("%rsi", "%rax");
-        v.x86().movq("%rdi", "%rcx");
-        v.x86().movq("$" + bool.FALSE_LABEL, "%rdx");
-        v.x86().ret();
-        v.x86().label("__min__2__"); // len(l1) < len(l2)
-        v.x86().movq("%rdi", "%rax");
-        v.x86().movq("%rsi", "%rcx");
-        v.x86().movq("$" + bool.TRUE_LABEL, "%rdx");
-        v.x86().ret();
-    }
-
-    /**
-     * Evaluates %rdi<=%rsi
-     *
-     * @param v Visitor
-     */
-    @Builtin
-    @Kills(reg = {"%rax", "%r8", "%r9"})
-    public static void __comp__lt__int__(TVisitor v) {
-        // Perform %rdi <= %rsi
-        // Return true
-        v.x86().movq("8(%rdi)", "%r8");
-        v.x86().movq("8(%rsi)", "%r9");
-
-        v.x86().cmpq("%r8", "%r9");
-        v.x86().jl("__comp__lt__int__if__");
-        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
-        v.x86().ret();
-
-        v.x86().label("__comp__lt__int__if__");
-        v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
-        v.x86().ret();
-    }
-
-    @Builtin
-    @Kills(reg = {"%rax", "%r8", "%r9"})
-    public static void __comp__le__int__(TVisitor v) {
-        // Perform %rdi <= %rsi
-        // Return true
-        v.x86().movq("8(%rdi)", "%r8");
-        v.x86().movq("8(%rsi)", "%r9");
-
-        v.x86().cmpq("%r8", "%r9");
-        v.x86().jle("__comp__le__int__if__");
-        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
-        v.x86().ret();
-
-        v.x86().label("__comp__le__int__if__");
-        v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
-        v.x86().ret();
-    }
-
-    @Builtin
-    @Kills(reg = {"%rax", "%r8", "%r9"})
-    public static void __comp__gt__int__(TVisitor v) {
-        // Perform %rdi <= %rsi
-        // Return true
-        v.x86().movq("8(%rdi)", "%r8");
-        v.x86().movq("8(%rsi)", "%r9");
-
-        v.x86().cmpq("%r8", "%r9");
-        v.x86().jg("__comp__gt__int__if__");
-        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
-        v.x86().ret();
-
-        v.x86().label("__comp__gt__int__if__");
-        v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
-        v.x86().ret();
-    }
-
-    @Builtin
-    @Kills(reg = {"%rax", "%r8", "%r9"})
-    public static void __comp__ge__int__(TVisitor v) {
-        // Perform %rdi <= %rsi
-        // Return true
-        v.x86().movq("8(%rdi)", "%r8");
-        v.x86().movq("8(%rsi)", "%r9");
-
-        v.x86().cmpq("%r8", "%r9");
-        v.x86().jge("__comp__ge__int__if__");
-        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
-        v.x86().ret();
-
-        v.x86().label("__comp__ge__int__if__");
-        v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
-        v.x86().ret();
-    }
-
-    /**
-     *
-     * @param v
-     */
     @Builtin
     public static void range(TVisitor v) {
         v.x86().dlabel(Type.methodNameLabel("range"));
@@ -189,25 +83,6 @@ public class BuiltinFunctions {
         }, "%r12", "%r13", "%r14");
         v.x86().ret();
     }
-
-    @Builtin
-    @Kills(reg = {"%rax", "%r8", "%r9"})
-    public static void __lt__(TVisitor v) {
-
-    }
-
-    @Builtin
-    @Kills(reg = {"%rax", "%r8", "%r9"})
-    public static void __le__(TVisitor v) {
-
-    }
-
-    @Builtin
-    @Kills(reg = {"%rax", "%r8", "%r9"})
-    public static void __gt__(TVisitor v) {
-
-    }
-
 
     @Builtin
     public static void __err__(TVisitor v) {
