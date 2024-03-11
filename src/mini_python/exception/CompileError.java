@@ -49,6 +49,7 @@ public class CompileError extends Error {
 
             out.add("Compilation error at line " + i + ", column " + loc.column + " of file " + Main.file + ":");
             out.add("");
+            out.add("-----------------------------------------------");
 
             // Display lines
             out.addAll(fetchPreviousLines());
@@ -56,10 +57,11 @@ public class CompileError extends Error {
             // Display column
             final StringBuilder colDisp = new StringBuilder();
             int j = 0;
-            while (j++ < loc.column) colDisp.append('.');
+            while (j++ < loc.column) colDisp.append(' ');
             colDisp.append('^');
-            while (j++ < tgtline.length()) colDisp.append('.');
+            while (j++ < tgtline.length()) colDisp.append(' ');
             out.add(colDisp.toString());
+            out.add("-----------------------------------------------");
             out.add("");
         }
 
