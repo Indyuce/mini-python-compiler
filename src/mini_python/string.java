@@ -24,7 +24,6 @@ public class string extends Type {
 
     @Override
     public void __add__(TVisitor v) {
-
         v.ofType("%rsi", Type.STRING, "__add__", Type.STRING);
 
         v.saveRegisters(() -> {

@@ -350,8 +350,12 @@ class TVisitorImpl implements TVisitor {
             x86.pushq("%rax"); // push argument on stack
         }
 
-
         x86.call(e.f.name);
+
+        // We did many pushes we need to undo here
+        for (int i = 0; i < e.l.size(); i++) {
+            x86.addq("$8", "%rsp"); // Pop without storing basically
+        }
     }
 
     @Override
