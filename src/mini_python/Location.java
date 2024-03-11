@@ -1,11 +1,10 @@
 package mini_python;
 
 public class Location {
-    final int line;
-    final int column;
+    public final int line;
+    public final int column;
 
-    @Deprecated
-    public static final Location START = new Location(0, 0);
+    public static final Location NONE = new Location(0, 0);
 
     Location(int line, int column) {
         this.line = line + 1;

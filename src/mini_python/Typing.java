@@ -22,7 +22,7 @@ class Typing {
 
         // Typed file
         final TFile tf = new TFile();
-        final Function mainFunction = new Function(Location.START, Compile.LABEL_MAIN);
+        final Function mainFunction = new Function(Location.NONE, Compile.LABEL_MAIN);
         final Visitor visitor = new VisitorImpl(tf, mainFunction);
 
         // All functions
