@@ -3,6 +3,7 @@
 bin/
 *.iml
 *.out
+out
 *.sctest/
 test.s
 *.kate*

@@ -37,9 +37,6 @@ Attention aux registres %rdi et %rsi qui sont souvent utilisés et qui sont bien
 
 ### Registers
 
-Convention : %r15 est callee-saved donc ne sera pas modifié par les syscalls par exemple. Ainsi, il est interdit
-d'utiliser ce registre car il contient l'addresse du type descriptor array.
-
 <image style="width: 600px;" src="assets/x86-64-integer-registers-usage-conventions-l.jpg"></image>
 <image style="width: 600px;" src="assets/1_4ipwUzIWd4eqUvcEmZ5tMQ.png"></image>
 
@@ -47,10 +44,8 @@ d'utiliser ce registre car il contient l'addresse du type descriptor array.
 
 - Un bon compilateur C en ligne pour avoir de l'inspiration pour le code assembly : https://godbolt.org/
 
-### Possibles améliorations
+### Possibles améliorations (non)
 
-- Ou mettre l'addresse du TDA ????
-- Mettre l'addresse des TD directement dans les valeurs au lieu de mettre un int
 - Créer un système qui permet de vérifier formellement qu'il n'y a pas de problèmes d'allocation des registres (genre
   quand on utilise %r10 ça vérifie au compile time qu'il est pas écrasé plus tard et qu'on a pas fait exprès)
 - Tuples python (unchangeable) ou classes
