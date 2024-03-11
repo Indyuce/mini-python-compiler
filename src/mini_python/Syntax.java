@@ -484,6 +484,11 @@ class Function {
     @Difference
     final LinkedList<Variable> local = new LinkedList<>();
 
+    /**
+     * Constructor for class Function
+     * @param loc Location
+     * @param name Name of the function
+     */
     Function(Location loc, String name) {
         this.name = name;
     }
@@ -565,6 +570,11 @@ class TEget extends TExpr {
     @Override
     void accept(TVisitor v) {
         v.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return "TEget<"+e1.toString()+","+e2.toString()+">";
     }
 }
 

@@ -16,7 +16,7 @@ public class MyLexer extends Lexer {
   Queue<Symbol> tokens = new LinkedList<Symbol>();
 
   @Override
-  public Symbol next_token() throws IOException, Exception {
+  public Symbol next_token() throws Exception {
     if (tokens.isEmpty()) {
       Symbol token = super.next_token();
       // System.out.println("next_token => " + token);
