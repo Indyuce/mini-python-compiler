@@ -38,7 +38,7 @@ class Typing {
             // Pairwise distinct function identifiers
             for (TDef sofar : tf.l)
                 if (sofar.f.name.equals(defFunction.name))
-                    throw new TypeError(def.f.loc, "duplicate function definition '" + defFunction.name + "'");
+                    throw new TypeError(def.f.loc, "duplicate function definition '" + def.f.id + "'");
 
             // Iterate over parameters
             for (Ident paramIdent : def.l) {
@@ -197,7 +197,7 @@ class VisitorImpl implements Visitor {
             case "range":
                 throw new TypeError(e.f.loc, "range(n) can only be used inside of list(.)");
 
-            // Implementation of list(range(.))
+                // Implementation of list(range(.))
             case "list":
                 if (e.l.size() != 1) throw new TypeError(e.f.loc, "list(.) takes 1 argument but got " + e.l.size());
                 final Expr expr = e.l.get(0);
