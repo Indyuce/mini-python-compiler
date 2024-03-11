@@ -254,8 +254,8 @@ class TVisitorImpl implements TVisitor {
         final String label = newDataLabel();
         x86.dlabel(label);
         x86.quadLabel(Type.STRING.classDescLabel());
-        x86.quad(c.s.length());
-        x86.string(c.s);
+        x86.quad(c.s.length()+1);
+        x86.string(c.s+"\\0");
         x86.movq("$" + label, "%rax");
     }
 

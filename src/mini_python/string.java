@@ -37,7 +37,7 @@ public class string extends Type {
             v.x86().movq("%rdi", "%r14"); // %r14 = len(s1 + s2)
             v.x86().addq("$17", "%rdi"); // %rdi = 16 + len(s1 + s2) + 1
             v.x86().call("__malloc__"); // allocate memory
-            v.x86().movq("$3", "0(%rax)"); // initialize type identifier
+            v.x86().movq(Type.STRING.classDesc(), "0(%rax)"); // initialize type identifier
             v.x86().movq("%r14", "8(%rax)"); // initialize string length
             v.x86().movq("%rax", "%r14"); // %r14 = &res
 
