@@ -1,6 +1,6 @@
 package mini_python;
 
-import mini_python.exception.CompileError;
+import mini_python.exception.CompileException;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -50,8 +50,8 @@ public class Main {
             asm.printToFile(file_s);
         }
 
-        // Nicely display
-        catch (CompileError error) {
+        // Catch exceptions nicely
+        catch (CompileException error) {
             if (stack_traces) error.printStackTrace();
             else error.printError();
             System.exit(1);

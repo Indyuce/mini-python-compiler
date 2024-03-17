@@ -5,6 +5,7 @@ import mini_python.annotation.Delegated;
 import mini_python.annotation.NotNull;
 import mini_python.annotation.Undefined;
 import mini_python.exception.CompileError;
+import mini_python.exception.CompileException;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
