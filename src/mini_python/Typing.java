@@ -30,7 +30,7 @@ class Typing {
 
             // Reserved function name
             if (Typing.RESERVED_FUNCTION_NAMES.contains(def.f.id))
-                throw new TypeException(def.f.loc, "tried defining function with reserved identifier '" + def.f.id + "'");
+                throw Utils.typeException(def.f.loc, "tried defining function with reserved identifier '" + def.f.id + "'");
 
             // Define new typed function
             final Function defFunction = new Function(def.f.loc, USER_DEFINED_FUNCTION_PREFIX + def.f.id);
@@ -38,7 +38,7 @@ class Typing {
             // Pairwise distinct function identifiers
             for (TDef sofar : tf.l)
                 if (sofar.f.name.equals(defFunction.name))
-                    throw new TypeException(def.f.loc, "duplicate function definition '" + def.f.id + "'");
+                    throw Utils.typeException(def.f.loc, "duplicate function definition '" + def.f.id + "'");
 
             // Iterate over parameters
             for (Ident paramIdent : def.l) {
@@ -46,7 +46,7 @@ class Typing {
                 // Pairwise distinct function param identifiers
                 for (Variable var : defFunction.params)
                     if (var.name.equals(paramIdent.id))
-                        throw new TypeException(paramIdent.loc, "duplicate function argument identifier '" + paramIdent.id + "'");
+                        throw Utils.typeException(paramIdent.loc, "duplicate function argument identifier '" + paramIdent.id + "'");
 
                 // Register parameter
                 defFunction.params.add(Variable.mkVariable(paramIdent.id));
@@ -186,7 +186,7 @@ class VisitorImpl implements Visitor {
             if (tdef.f.name.equals(name_to_find)) return tdef.f;
 
         // Throw type error
-        throw new TypeException(ident.loc, "could not match function to identifier '" + ident + "'");
+        throw Utils.typeException(ident.loc, "could not match function to identifier '" + ident + "'");
     }
 
     @Override
@@ -195,22 +195,22 @@ class VisitorImpl implements Visitor {
 
             // Wrong syntax
             case "range":
-                throw new TypeException(e.f.loc, "range(n) can only be used inside of list(.)");
+                throw Utils.typeException(e.f.loc, "range(n) can only be used inside of list(.)");
 
                 // Implementation of list(range(.))
             case "list":
-                if (e.l.size() != 1) throw new TypeException(e.f.loc, "list(.) takes 1 argument but got " + e.l.size());
+                if (e.l.size() != 1) throw Utils.typeException(e.f.loc, "list(.) takes 1 argument but got " + e.l.size());
                 final Expr expr = e.l.get(0);
-                if (!(expr instanceof Ecall call)) throw new TypeException(e.f.loc, "list(.) takes a range as argument");
-                if (!call.f.id.equals("range")) throw new TypeException(call.f.loc, "list(.) takes a range as argument");
+                if (!(expr instanceof Ecall call)) throw Utils.typeException(e.f.loc, "list(.) takes a range as argument");
+                if (!call.f.id.equals("range")) throw Utils.typeException(call.f.loc, "list(.) takes a range as argument");
                 if (call.l.size() != 1)
-                    throw new TypeException(call.f.loc, "range(.) takes 1 argument but got " + call.l.size());
+                    throw Utils.typeException(call.f.loc, "range(.) takes 1 argument but got " + call.l.size());
                 ret = new TErange(expr(call.l.get(0)));
                 break;
 
             // Implementation of len(.)
             case "len":
-                if (e.l.size() != 1) throw new TypeException(e.f.loc, "len(.) takes 1 argument but got " + e.l.size());
+                if (e.l.size() != 1) throw Utils.typeException(e.f.loc, "len(.) takes 1 argument but got " + e.l.size());
                 ret = new TElen(expr(e.l.get(0)));
                 break;
 
@@ -220,7 +220,7 @@ class VisitorImpl implements Visitor {
 
                 // Check arity
                 if (e.l.size() != func.params.size())
-                    throw new TypeException(e.f.loc, "wrong function arity, expected " + func.params.size() + " arguments, got " + e.l.size());
+                    throw Utils.typeException(e.f.loc, "wrong function arity, expected " + func.params.size() + " arguments, got " + e.l.size());
 
                 ret = new TEcall(func, exprs(e.l));
         }
@@ -261,7 +261,7 @@ class VisitorImpl implements Visitor {
         for (Variable var : mfunc.params)
             if (var.name.equals(ident.id)) return var;
 
-        if (!allowCreate) throw new TypeException(ident.loc, "Right variable is not identified, with id " + ident.id);
+        if (!allowCreate) throw Utils.typeException(ident.loc, "Right variable is not identified, with id " + ident.id);
 
         // Create new variable, local to visited function
         final Variable newVar = Variable.mkVariable(ident.id);

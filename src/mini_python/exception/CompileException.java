@@ -1,18 +1,21 @@
 package mini_python.exception;
 
 import mini_python.Location;
-import mini_python.Main;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CompileException extends Error {
     final Location loc;
+    final List<String> lines;
+    final String file;
 
-    public CompileException(Location loc, String message) {
+    public CompileException(Location loc, String message, List<String> lines, String file) {
         super(message);
 
         this.loc = loc;
+        this.lines = lines;
+        this.file = file;
     }
 
     public Location getLocation() {
@@ -30,7 +33,7 @@ public class CompileException extends Error {
         final List<String> out = new ArrayList<>();
 
         if (loc != Location.NONE) {
-            out.add(ANSI_RED + "Compilation error at line " + loc.line + ", column " + loc.column + " of file " + Main.file + ":");
+            out.add(ANSI_RED + "Compilation error at line " + loc.line + ", column " + loc.column + " of file " + this.file + ":");
             out.add("");
             displayLines(out);
             out.add("");
@@ -74,7 +77,7 @@ public class CompileException extends Error {
         int disp = 0;
         int i = this.loc.line - 1;
         while (i >= 0 && disp < DISPLAY_PREVIOUS_LINES) {
-            final String nextLine = Main.lines.get(i--);
+            final String nextLine = this.lines.get(i--);
             if (!DISPLAY_EMPTY_LINES && isEmpty(nextLine)) continue;
 
             final int lineNumber = i + 2;
@@ -99,7 +102,7 @@ public class CompileException extends Error {
         }
 
         // Target line
-        final String tgtline = Main.lines.get(loc.line - 1); // Target line
+        final String tgtline = this.lines.get(loc.line - 1); // Target line
         final StringBuilder colDisp = new StringBuilder("       ");
         int j = 0;
         while (j++ < loc.column) colDisp.append(' ');
