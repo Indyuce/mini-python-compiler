@@ -55,10 +55,22 @@ public class none extends Type {
         throw new MethodNotDefinedError();
     }
 
+    private static final String __EQ__POS__ = "__none__eq__pos__";
+
     @Override
-    @Undefined
     public void __eq__(TVisitor v) {
-        throw new MethodNotDefinedError();
+
+        // Check type of arg
+        v.x86().movq("0(%rsi)", "%r10");
+        v.x86().cmpq(Type.NONE.classDesc(), "%r10");
+        v.x86().je(__EQ__POS__);
+        v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
+        v.x86().ret();
+
+        // Check value
+        v.x86().label(__EQ__POS__);
+        v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
+        v.x86().ret();
     }
 
     @Override
