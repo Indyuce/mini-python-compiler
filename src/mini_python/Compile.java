@@ -361,7 +361,6 @@ class TVisitorImpl implements TVisitor {
 
     @Override
     public void visit(TEget e) {
-        System.out.println(e);
         e.e1.accept(this);
         ofType("%rax", Type.LIST, "__get__", Type.LIST); // %rax = &[list]
 

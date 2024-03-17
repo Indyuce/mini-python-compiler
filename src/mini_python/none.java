@@ -56,6 +56,7 @@ public class none extends Type {
     }
 
     private static final String __EQ__POS__ = "__none__eq__pos__";
+    private static final String __NEQ__POS__ = "__none__neq__pos__";
 
     @Override
     public void __eq__(TVisitor v) {
@@ -73,21 +74,18 @@ public class none extends Type {
         v.x86().ret();
     }
 
-    private static final String __NEQ__POS__ = "__none__neq__pos__";
-
     @Override
-    @Undefined
     public void __neq__(TVisitor v) {
 
         // Check type of arg
         v.x86().movq("0(%rsi)", "%r10");
         v.x86().cmpq(Type.NONE.classDesc(), "%r10");
-        v.x86().jne(__EQ__POS__);
+        v.x86().jne(__NEQ__POS__);
         v.x86().movq("$" + bool.FALSE_LABEL, "%rax");
         v.x86().ret();
 
         // Check value
-        v.x86().label(__EQ__POS__);
+        v.x86().label(__NEQ__POS__);
         v.x86().movq("$" + bool.TRUE_LABEL, "%rax");
         v.x86().ret();
     }
