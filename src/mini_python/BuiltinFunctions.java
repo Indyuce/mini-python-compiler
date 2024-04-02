@@ -63,7 +63,7 @@ public class BuiltinFunctions {
 
             v.x86().leaq("16(, %r13, 8)", "%rdi"); // Allocate memory for list
             v.x86().call("__malloc__");
-            v.x86().movq("%rdi", "%r14"); // %r14 = &[list]
+            v.x86().movq("%rax", "%r14"); // %r14 = &[list]
             v.x86().movq(Type.LIST.classDesc(), "0(%r14)"); // write type identifier
             v.x86().movq("%r13", "8(%r14)"); // write length
 
